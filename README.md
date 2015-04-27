@@ -1,6 +1,6 @@
 # About
 
-The goal of this project is to make it easy for user to convert .7z files to "hashes" which oclHashcat can crack with mode: -m 11600 = 7-Zip
+The goal of this project is to make it very easy to convert .7z files to "hashes" which oclHashcat can crack with mode: -m 11600 = 7-Zip
 
 # Requirements
 
