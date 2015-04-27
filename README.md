@@ -21,10 +21,10 @@ Software:
 
 # Command line parameters 
 
-You can use several files on the command line like this: 
-    ./7z2hashcat.pl file1.7z file2.7z 
-    ./7z2hashcat.pl *.7z 
-    ./7z2hashcat.pl seven_zip_files/* 
+You can use several files on the command line like this:   
+    ./7z2hashcat.pl file1.7z file2.7z  
+    ./7z2hashcat.pl *.7z  
+    ./7z2hashcat.pl seven_zip_files/*  
 
 # Hacking / Missing features
 
