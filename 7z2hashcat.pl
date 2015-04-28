@@ -522,7 +522,7 @@ sub extract_hash_from_archive
   my $coder_id = 0;
 
   my $coder = $folder->{'coders'}[$coder_id];
-  next unless (defined ($coder));
+  return undef unless (defined ($coder));
 
   my $codec_id = $coder->{'codec_id'};
 
@@ -552,7 +552,7 @@ sub extract_hash_from_archive
 
     my $property_lclppb = lzma_properties_decode ($attributes);
 
-    next unless (length ($property_lclppb) == 1);
+    return undef unless (length ($property_lclppb) == 1);
 
     my $pack_size = $data_len;
 
@@ -568,13 +568,13 @@ sub extract_hash_from_archive
 
     $lz->code ($lzma_header, $decompressed_header);
 
-    next unless (length ($decompressed_header) > 0);
+    return undef unless (length ($decompressed_header) > 0);
 
     # check the decompressed 7zip header
 
     my $id = my_read (\$decompressed_header, 1);
 
-    next unless ($id eq $SEVEN_ZIP_HEADER);
+    return undef unless ($id eq $SEVEN_ZIP_HEADER);
 
     my $header = read_seven_zip_header (\$decompressed_header);
 
@@ -692,18 +692,18 @@ sub extract_hash_from_archive
 
   my $data = my_read ($fp, $data_len);
 
-  next unless (length ($data) == $data_len);
+  return undef unless (length ($data) == $data_len);
 
   # get remaining hash info (iv, number cycles power)
 
   my $digest = get_digest ($digests_index, $unpack_info, $substreams_info);
 
-  next unless ((defined ($digest)) && ($digest->{'defined'} == 1));
+  return undef unless ((defined ($digest)) && ($digest->{'defined'} == 1));
 
   my $attributes = $coder->{'attributes'};
 
   my ($salt_len, $salt_buf, $iv_len, $iv_buf, $number_cycles_power) = get_decoder_properties ($attributes);
-  next unless (defined ($salt_buf));
+  return undef unless (defined ($salt_buf));
 
   my $crc = $digest->{'crc'};
 
