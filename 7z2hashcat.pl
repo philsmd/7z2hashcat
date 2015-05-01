@@ -8,6 +8,9 @@ use Compress::Raw::Lzma;
 # author:
 # philsmd (for hashcat)
 
+# version:
+# 0.3
+
 # date:
 # april 2015
 
@@ -70,6 +73,8 @@ my $SEVEN_ZIP_LZMA              = "\x03\x01\x01";
 my $SEVEN_ZIP_HASH_SIGNATURE    = "\$7z\$";
 my $SEVEN_ZIP_P_VALUE           = 0;
 my $SEVEN_ZIP_HASHCAT_MAX_DATA  = 768;
+my $SEVEN_ZIP_DEFAULT_POWER     = 19;
+my $SEVEN_ZIP_DEFAULT_IV        = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
 #
 # Helper functions
@@ -261,6 +266,14 @@ sub get_decoder_properties
   my $iv_buf;
   my $number_cycles_power;
 
+  # set some default values
+
+  $salt_len = 0;
+  $salt_buf = "";
+  $iv_len = length ($SEVEN_ZIP_DEFAULT_IV);
+  $iv_buf = $SEVEN_ZIP_DEFAULT_IV;
+  $number_cycles_power = $SEVEN_ZIP_DEFAULT_POWER;
+
   # the most important information is encoded in first and second byte
   # i.e. the salt/iv length, number cycle power
 
@@ -275,7 +288,7 @@ sub get_decoder_properties
 
   if (($first_byte & 0xc0) == 0)
   {
-    return undef;
+    return ($salt_len, $salt_buf, $iv_len, $iv_buf, $number_cycles_power);
   }
 
   $salt_len = ($first_byte >> 7) & 1;
@@ -703,7 +716,6 @@ sub extract_hash_from_archive
   my $attributes = $coder->{'attributes'};
 
   my ($salt_len, $salt_buf, $iv_len, $iv_buf, $number_cycles_power) = get_decoder_properties ($attributes);
-  return undef unless (defined ($salt_buf));
 
   my $crc = $digest->{'crc'};
 
@@ -902,7 +914,7 @@ sub read_seven_zip_pack_info
 
   if (! wait_for_seven_zip_id ($fp, $SEVEN_ZIP_SIZE))
   {
-    return $pack_info;
+    return undef;
   }
 
   my @pack_sizes = (0) x $number_pack_streams;
@@ -1136,7 +1148,7 @@ sub read_seven_zip_unpack_info
 
   if (! wait_for_seven_zip_id ($fp, $SEVEN_ZIP_FOLDER))
   {
-    return $unpack_info;
+    return undef;
   }
 
   # NumFolders
@@ -1788,7 +1800,7 @@ sub read_seven_zip_files_info
         {
           my $defined = $booleans[$i];
 
-           $files[$i]->{'attribute_defined'} = $defined;
+          $files[$i]->{'attribute_defined'} = $defined;
 
           if ($defined)
           {
