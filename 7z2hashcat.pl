@@ -11,8 +11,11 @@ use Compress::Raw::Lzma;
 # version:
 # 0.3
 
-# date:
+# date released:
 # april 2015
+
+# date last updated:
+# 1st May 2015
 
 # dependencies:
 # Compress::Raw::Lzma
