@@ -9,13 +9,13 @@ use Compress::Raw::Lzma;
 # philsmd (for hashcat)
 
 # version:
-# 0.3
+# 0.4
 
 # date released:
 # april 2015
 
 # date last updated:
-# 1st May 2015
+# 20th June 2015
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -706,10 +706,6 @@ sub extract_hash_from_archive
 
   seek $fp, $current_seek_position, 0;
 
-  my $data = my_read ($fp, $data_len);
-
-  return undef unless (length ($data) == $data_len);
-
   # get remaining hash info (iv, number cycles power)
 
   my $digest = get_digest ($digests_index, $unpack_info, $substreams_info);
@@ -724,6 +720,8 @@ sub extract_hash_from_archive
 
   # special case: we can truncate the data_len and use 32 bytes in total for both iv + data (last 32 bytes of data)
 
+  my $data;
+
   if ($has_encrypted_header == 0)
   {
     my $length_difference = $data_len - $unpack_size;
@@ -732,16 +730,25 @@ sub extract_hash_from_archive
     {
       if ($data_len >= 32)
       {
-        $iv_buf = substr ($data, $data_len - 32, 16);
+        seek $fp, $data_len - 32, 1;
+
+        $iv_buf = my_read ($fp, 16);
         $iv_len = 16;
 
-        $data = substr ($data, $data_len - 16, 16);
+        $data = my_read ($fp, 16);
         $data_len = 16;
 
         $unpack_size %= 16;
       }
     }
   }
+
+  if (! defined ($data))
+  {
+    $data = my_read ($fp, $data_len);
+  }
+
+  return undef unless (length ($data) == $data_len);
 
   if ($data_len > $SEVEN_ZIP_HASHCAT_MAX_DATA)
   {
