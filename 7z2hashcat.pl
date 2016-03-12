@@ -437,13 +437,13 @@ sub lzma_generate_header
 
   my @out = ();
   $out[0]  = 0x80 + (3 << 5);
-  $out[0] += ($uncompressed_size >> 16);
+  $out[0] += ($uncompressed_size >> 16) & 0xff;
   $out[1]  = ($uncompressed_size >>  8) & 0xff;
   $out[2]  = ($uncompressed_size      ) & 0xff;
 
   $compressed_size--;
 
-  $out[3]  = ($compressed_size >> 8);
+  $out[3]  = ($compressed_size >> 8) & 0xff;
   $out[4]  = ($compressed_size     ) & 0xff;
 
   # lclppb_encode (lc lp pb)
