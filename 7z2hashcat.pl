@@ -1763,7 +1763,7 @@ sub read_seven_zip_files_info
 
         if ($external eq $SEVEN_ZIP_EXTERNAL)
         {
-          # not implemented yet
+          # TODO: not implemented yet
 
           return undef;
         }
@@ -1801,7 +1801,7 @@ sub read_seven_zip_files_info
 
         if ($external eq $SEVEN_ZIP_EXTERNAL)
         {
-          # not implemented yet
+          # TODO: not implemented yet
 
           return undef;
         }
