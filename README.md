@@ -1,6 +1,6 @@
 # About
 
-The goal of this project is to make it very easy to convert .7z files to "hashes" which oclHashcat can crack with mode: -m 11600 = 7-Zip
+The goal of this project is to make it very easy to convert .7z files to "hashes" which hashcat can crack with mode: -m 11600 = 7-Zip
 
 # Requirements
 
@@ -17,7 +17,7 @@ Software:
     cd 7z2hashcat
 * Run it:  
     ./7z2hashcat.pl file.7z
-* Copy output to a file (or redirect output to a file (>) directly) and run it with oclHashcat using mode -m 11600 = 7-Zip
+* Copy output to a file (or redirect output to a file (>) directly) and run it with hashcat using mode -m 11600 = 7-Zip
 
 # Command line parameters 
 

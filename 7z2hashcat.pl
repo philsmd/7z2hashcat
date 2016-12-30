@@ -752,7 +752,7 @@ sub extract_hash_from_archive
 
   if ($data_len > $SEVEN_ZIP_HASHCAT_MAX_DATA)
   {
-    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with oclHashcat ";
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with hashcat ";
     print STDERR "since the data length in this particular case is too long and it can't be truncated.\n";
     print STDERR "This happens only in very rare cases\n";
 
