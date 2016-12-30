@@ -453,7 +453,7 @@ sub lzma_generate_header
   # my $pb = 2;
   # my $lp = 0;
   # my $lc = 3;
-  # 
+  #
   # $out[5] = ($pb * 5 + $lp) * 9 + $lc;
 
   $out[5] = ord ($encoded_lclppb);
