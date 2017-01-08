@@ -3,27 +3,27 @@
 use strict;
 use warnings;
 
-use Compress::Raw::Lzma;
+use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 
 # author:
-# philsmd (for hashcat)
+# philsmd
 
 # version:
-# 0.4
+# 0.5
 
 # date released:
-# april 2015
+# April 2015
 
 # date last updated:
-# 20th June 2015
+# 8th January 2017
 
 # dependencies:
 # Compress::Raw::Lzma
 
 # install dependencies like this:
-# perl -MCPAN -e 'install Compress::Raw::Lzma'
+#    sudo cpan Compress::Raw::Lzma
 # or sudo apt-get install libcompress-raw-lzma-perl
-# or cpan -i Compress::Raw::Lzma
+# or sudo perl -MCPAN -e 'install Compress::Raw::Lzma'
 
 #
 # Constants
@@ -416,11 +416,34 @@ sub lzma_properties_decode
 {
   my $attributes = shift;
 
-  my $byte;
+  my $lclppb;
 
-  $byte = substr ($attributes, 0, 1);
+  $lclppb = substr ($attributes, 0, 1);
 
-  return $byte;
+  my @data;
+
+  #data[0] is the lclppb value
+
+  $data[1] = ord (substr ($attributes, 1, 1));
+  $data[2] = ord (substr ($attributes, 2, 1));
+  $data[3] = ord (substr ($attributes, 3, 1));
+  $data[4] = ord (substr ($attributes, 4, 1));
+
+  my $dict_size = $data[1] | $data[2] << 8 | $data[3] << 16 | $data[4] << 24;
+
+  if ($dict_size < LZMA_DICT_SIZE_MIN)
+  {
+    $dict_size = LZMA_DICT_SIZE_MIN;
+  }
+
+  my $d = ord ($lclppb);
+
+  my $lc = int ($d % 9);
+     $d  = int ($d / 9);
+  my $pb = int ($d / 5);
+  my $lp = int ($d % 5);
+
+  return ($lclppb, $dict_size, $lc, $pb, $lp);
 }
 
 sub lzma_generate_header
@@ -437,7 +460,8 @@ sub lzma_generate_header
 
   my @out = ();
   $out[0]  = 0x80 + (3 << 5);
-  $out[0] += ($uncompressed_size >> 16) & 0xff;
+  $out[0] += ($uncompressed_size >> 16);
+  $out[0] &= 0xff;
   $out[1]  = ($uncompressed_size >>  8) & 0xff;
   $out[2]  = ($uncompressed_size      ) & 0xff;
 
@@ -566,7 +590,7 @@ sub extract_hash_from_archive
 
     my $attributes = $coder->{'attributes'};
 
-    my $property_lclppb = lzma_properties_decode ($attributes);
+    my ($property_lclppb, $dict_size, $lc, $pb, $lp) = lzma_properties_decode ($attributes);
 
     return undef unless (length ($property_lclppb) == 1);
 
@@ -580,9 +604,31 @@ sub extract_hash_from_archive
 
     my $decompressed_header = "";
 
-    my $lz = new Compress::Raw::Lzma::RawDecoder;
+    my $lzma_filter = Lzma::Filter::Lzma2 (DictSize => $dict_size, lc => $lc, pb => $pb, lp => $lp);
 
-    $lz->code ($lzma_header, $decompressed_header);
+    # ATTENTION: in theory the filter should be lzma1 (and not Lzma2):
+    # my $lzma_filter = Lzma::Filter::Lzma1 (DictSize => $dict_size, lc => $lc, pb => $pb, lp => $lp);
+    # my $lz = new Compress::Raw::Lzma::RawDecoder (Filter => $lzma_filter, Properties => $attributes, AppendOutput => 1);
+    # but for some reasons this doesn't work :(
+    # (this might be related to the problem decompressing some large lzma buffers)
+
+    my $lz = new Compress::Raw::Lzma::RawDecoder (Filter => $lzma_filter, AppendOutput => 1);
+
+    my $status = $lz->code ($lzma_header, $decompressed_header);
+
+    if ($status != LZMA_STREAM_END)
+    {
+      print STDERR "WARNING: the 7z header decompression failed with status: '" . $status . "'\n";
+
+      if ($status eq "Data is corrupt")
+      {
+        print STDERR "\n";
+        print STDERR "INFO: for some reasons for large LZMA buffers we sometimes get a 'Data is corrupt' error\n";
+        print STDERR "      this is a known issue and needs to be investigated\n";
+      }
+
+      return "";
+    }
 
     return undef unless (length ($decompressed_header) > 0);
 
