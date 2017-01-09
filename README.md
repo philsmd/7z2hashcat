@@ -13,7 +13,8 @@ Note: for windows users the [release page](https://github.com/philsmd/7z2hashcat
 
 # Installation and first steps
 
-Note: this paragraph is only intended for users that do not use the release version for windows. You should be able to just run 7z2hashcat.exe if you are a windows user.
+Note: this paragraph is only intended for users that do not use the release version for windows.
+You should be able to just run 7z2hashcat.exe if you are a windows user.
 
 * Clone this repository:  
     git clone https://github.com/philsmd/7z2hashcat.git  
@@ -30,7 +31,7 @@ You can use several files on the command line like this:
     ./7z2hashcat.pl \*.7z  
     ./7z2hashcat.pl seven_zip_files/\*  
 
-Note: on windows you can use the release files (.exe) and therefore you shouldn't forget to replace ".pl" extension with ".exe"
+Note: on windows you can use the release files (.exe) and therefore you shouldn't forget to replace the ".pl" extension with ".exe"
 Note2: you can also use the perl script on windows directly after installing the [requirements](#requirements) e.g. perl 7z2hashcat.pl ...
 
 # Hacking / Missing features
