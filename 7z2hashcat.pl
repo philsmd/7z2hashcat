@@ -635,9 +635,9 @@ sub extract_hash_from_archive
         print STDERR "      The problem might have to do with this small paragraph hidden in the 7z documentation (quote):\n";
         print STDERR "      'The reference LZMA Decoder ignores the value of the \"Corrupted\" variable.\n";
         print STDERR "       So it continues to decode the stream, even if the corruption can be detected\n";
-        print STDERR "       In the Range Decoder. To provide the full compatibility with output of the\n";
-        print STDERR "       Reference LZMA Decoder, another LZMA Decoder implementations must also\n";
-        print STDERR "       Ignore the value of the \"Corrupted\" variable.'\n";
+        print STDERR "       in the Range Decoder. To provide the full compatibility with output of the\n";
+        print STDERR "       reference LZMA Decoder, another LZMA Decoder implementation must also\n";
+        print STDERR "       ignore the value of the \"Corrupted\" variable.'\n";
         print STDERR "\n";
         print STDERR "      (taken from the DOC/lzma-specification.txt file of the 7z-SDK: see for instance:\n";
         print STDERR "       https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt#L343-L347)\n";
