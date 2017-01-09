@@ -623,7 +623,7 @@ sub extract_hash_from_archive
 
     if ($status != LZMA_STREAM_END)
     {
-      print STDERR "WARNING: the LZMA header decompression failed with status: '" . $status . "'\n";
+      print STDERR "WARNING: the LZMA header decompression for the file '" . $file_path . "' failed with status: '" . $status . "'\n";
 
       if ($status eq "Data is corrupt")
       {
