@@ -8,7 +8,8 @@ Software:
 - Perl must be installed (should work on *nix and windows with perl installed) 
 - Perl module "Compress::Raw::Lzma" (this is needed because .7z header will be compressed whenever there are more files and non-encrypted header is used)
 
-Note: for windows users the [release page](https://github.com/philsmd/7z2hashcat/releases) provides executable files (.exe) which should work AS-IS without the need to install perl or perl modules. Attention: the release version might not be up-to-date with the newest source code all the time, therefore please prefer to use the source code version (instead of the .exe version), especially when you experience some problems and want to report issues.
+Note: for windows users the [release page](https://github.com/philsmd/7z2hashcat/releases) provides executable files (.exe) which should work AS-IS without the need to install perl or perl modules.
+Attention: the release version (7z2hashcat.exe) might not be up-to-date with the newest source code all the time, therefore please prefer to use the source code version (instead of the .exe version), especially when you experience some problems and want to report issues.
 
 
 # Installation and first steps
