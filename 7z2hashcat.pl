@@ -842,7 +842,7 @@ sub extract_hash_from_archive
 
         if ($codec_id eq $SEVEN_ZIP_LZMA)
         {
-          print STDERR "WARNING: to correctly verify the CRC checksum of data contained within the file '". $file_path . "',\n";
+          print STDERR "WARNING: to correctly verify the CRC checksum of the data contained within the file '". $file_path . "',\n";
           print STDERR "the data must be decompressed using LZMA after the decryption step.\n";
           print STDERR "\n";
 
