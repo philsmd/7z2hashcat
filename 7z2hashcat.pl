@@ -29,6 +29,11 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # Constants
 #
 
+my $SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING = 1;
+
+my $LZMA2_MIN_COMPRESSED_LEN = 16; # the raw data (decrypted) needs to be at least: 3 + 1 + 1, header (start + size) + at least one byte of data + end
+                                   # therefore we need to have at least one AES BLOCK (128 bits = 16 bytes)
+
 # header
 
 my $SEVEN_ZIP_MAGIC = "7z\xbc\xaf\x27\x1c";
@@ -698,8 +703,10 @@ sub extract_hash_from_archive
 
       for (my $coder_pos = 0; $coder_pos < $number_coders; $coder_pos++)
       {
-        $coder = $folder->{'coders'}[$coder_id];
+        $coder = $folder->{'coders'}[$coder_pos];
         last unless (defined ($coder));
+
+        $coder_id = $coder_pos; # Attention: coder_id != codec_id !
 
         $codec_id = $coder->{'codec_id'};
 
@@ -777,6 +784,8 @@ sub extract_hash_from_archive
 
   # special case: we can truncate the data_len and use 32 bytes in total for both iv + data (last 32 bytes of data)
 
+  my $special_attack_possible = 0;
+
   my $data;
 
   if ($has_encrypted_header == 0)
@@ -797,6 +806,8 @@ sub extract_hash_from_archive
 
         $unpack_size %= 16;
       }
+
+      $special_attack_possible = 1;
     }
   }
 
@@ -814,6 +825,54 @@ sub extract_hash_from_archive
     print STDERR "This happens only in very rare cases\n";
 
     return "";
+  }
+
+  if ($SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING == 1)
+  {
+    if ($special_attack_possible == 0)
+    {
+      for (my $coder_pos = $coder_id; $coder_pos < $number_coders; $coder_pos++)
+      {
+        $coder = $folder->{'coders'}[$coder_pos];
+        last unless (defined ($coder));
+
+        $codec_id = $coder->{'codec_id'};
+
+        my $lzma1_or_lzma2_compression_found = 0;
+
+        if ($codec_id eq $SEVEN_ZIP_LZMA)
+        {
+          print STDERR "WARNING: to correctly verify the CRC 'hash' of data contained within the file '". $file_path . "',\n";
+          print STDERR "the data must be decompressed using LZMA after the decryption step.\n";
+          print STDERR "\n";
+
+          $lzma1_or_lzma2_compression_found = 1;
+        }
+        elsif ($codec_id eq $SEVEN_ZIP_LZMA2)
+        {
+          print STDERR "WARNING: to correctly verify the CRC checksum of the data contained within the file '". $file_path . "',\n";
+          print STDERR "the data must be decompressed using LZMA2 after the decryption step.\n";
+          print STDERR "\n";
+
+          $lzma1_or_lzma2_compression_found = 1;
+        }
+
+        if ($lzma1_or_lzma2_compression_found == 1)
+        {
+          print STDERR "Some cracking tools currently do not support the decompression step after decrypting the data.\n";
+          print STDERR "\n";
+
+          if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
+          {
+            print STDERR "INFO: it might still be possible to crack the password of this archive since the data part seems\n";
+            print STDERR "to be very short and therefore it might use the LZMA2 uncompressed chunk feature\n";
+            print STDERR "\n";
+          }
+
+          last;
+        }
+      }
+    }
   }
 
   $hash_buf = sprintf ("%s%i\$%i\$%i\$%s\$%i\$%s\$%i\$%i\$%i\$%s",
