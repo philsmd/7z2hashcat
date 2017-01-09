@@ -15,7 +15,7 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # April 2015
 
 # date last updated:
-# 8th January 2017
+# 9th January 2017
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -618,13 +618,24 @@ sub extract_hash_from_archive
 
     if ($status != LZMA_STREAM_END)
     {
-      print STDERR "WARNING: the 7z header decompression failed with status: '" . $status . "'\n";
+      print STDERR "WARNING: the LZMA header decompression failed with status: '" . $status . "'\n";
 
       if ($status eq "Data is corrupt")
       {
         print STDERR "\n";
-        print STDERR "INFO: for some reasons for large LZMA buffers we sometimes get a 'Data is corrupt' error\n";
-        print STDERR "      this is a known issue and needs to be investigated\n";
+        print STDERR "INFO: for some reasons, for large LZMA buffers, we sometimes get a 'Data is corrupt' error.\n";
+        print STDERR "      This is a known issue of this tool and needs to be investigated.\n";
+
+        print STDERR "\n";
+        print STDERR "      The problem might have to do with this small paragraph hidden in the 7z documentation (quote):\n";
+        print STDERR "      'The reference LZMA Decoder ignores the value of the \"Corrupted\" variable.\n";
+        print STDERR "       So it continues to decode the stream, even if the corruption can be detected\n";
+        print STDERR "       In the Range Decoder. To provide the full compatibility with output of the\n";
+        print STDERR "       Reference LZMA Decoder, another LZMA Decoder implementations must also\n";
+        print STDERR "       Ignore the value of the \"Corrupted\" variable.'\n";
+        print STDERR "\n";
+        print STDERR "      (taken from the DOC/lzma-specification.txt file of the 7z-SDK: see for instance:\n";
+        print STDERR "       https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt#L343-L347)\n";
       }
 
       return "";
