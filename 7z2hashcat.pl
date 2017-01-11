@@ -451,48 +451,26 @@ sub lzma_properties_decode
   return ($lclppb, $dict_size, $lc, $pb, $lp);
 }
 
-sub lzma_generate_header
+sub lzma_alone_header_field_encode
 {
-  my $compressed_size = shift;
-  my $uncompressed_size = shift;
-  my $encoded_lclppb = shift;
+  my $num = shift;
+  my $length = shift;
 
-  my $header;
+  my $value;
 
-  # generate the header (first 6 bytes)
+  my $length_doubled = $length * 2;
+  my $big_endian_val = pack ("H*", sprintf ("%0${length_doubled}x", $num));
 
-  $uncompressed_size--;
+  # what follows is just some easy way to convert endianess (there might be better ways of course)
 
-  my @out = ();
-  $out[0]  = 0x80 + (3 << 5);
-  $out[0] += ($uncompressed_size >> 16);
-  $out[0] &= 0xff;
-  $out[1]  = ($uncompressed_size >>  8) & 0xff;
-  $out[2]  = ($uncompressed_size      ) & 0xff;
+  $value = "";
 
-  $compressed_size--;
-
-  $out[3]  = ($compressed_size >> 8) & 0xff;
-  $out[4]  = ($compressed_size     ) & 0xff;
-
-  # lclppb_encode (lc lp pb)
-
-  # this is how it would be calculated (if not provided by the 7zip header itself):
-  #
-  # my $pb = 2;
-  # my $lp = 0;
-  # my $lc = 3;
-  #
-  # $out[5] = ($pb * 5 + $lp) * 9 + $lc;
-
-  $out[5] = ord ($encoded_lclppb);
-
-  for my $byte (@out)
+  for (my $i = $length - 1; $i >= 0; $i--)
   {
-    $header .= chr ($byte);
+    $value .= substr ($big_endian_val, $i, 1);
   }
 
-  return $header;
+  return $value;
 }
 
 sub extract_hash_from_archive
@@ -599,54 +577,79 @@ sub extract_hash_from_archive
 
     return undef unless (length ($property_lclppb) == 1);
 
-    my $pack_size = $data_len;
-
-    my $compressed_header = lzma_generate_header ($pack_size, $unpack_size, $property_lclppb);
-
-    my $lzma_header = $compressed_header . $data . $SEVEN_ZIP_END;
-
-    # lzma decompress the header
+    # the alone-format header is defined like this:
+    #
+    #   +------------+----+----+----+----+--+--+--+--+--+--+--+--+
+    #   | Properties |  Dictionary Size  |   Uncompressed Size   |
+    #   +------------+----+----+----+----+--+--+--+--+--+--+--+--+
+    #
 
     my $decompressed_header = "";
 
-    my $lzma_filter = Lzma::Filter::Lzma2 (DictSize => $dict_size, lc => $lc, pb => $pb, lp => $lp);
+    # we loop over this code section max. 2 times to try two variants of headers (with the correct/specific values and with default values)
 
-    # ATTENTION: in theory the filter should be lzma1 (and not Lzma2):
-    # my $lzma_filter = Lzma::Filter::Lzma1 (DictSize => $dict_size, lc => $lc, pb => $pb, lp => $lp);
-    # my $lz = new Compress::Raw::Lzma::RawDecoder (Filter => $lzma_filter, Properties => $attributes, AppendOutput => 1);
-    # but for some reasons this doesn't work :(
-    # (this might be related to the problem decompressing some large lzma buffers)
-
-    my $lz = new Compress::Raw::Lzma::RawDecoder (Filter => $lzma_filter, AppendOutput => 1);
-
-    my $status = $lz->code ($lzma_header, $decompressed_header);
-
-    if ($status != LZMA_STREAM_END)
+    for (my $try_number = 1; $try_number <= 2; $try_number++)
     {
-      print STDERR "WARNING: the LZMA header decompression for the file '" . $file_path . "' failed with status: '" . $status . "'\n";
+      my ($dict_size_encoded, $uncompressed_size_encoded);
+      my $lz = new Compress::Raw::Lzma::AloneDecoder (AppendOutput => 1);
 
-      if ($status eq "Data is corrupt")
+      if ($try_number == 1)
       {
-        print STDERR "\n";
-        print STDERR "INFO: for some reasons, for large LZMA buffers, we sometimes get a 'Data is corrupt' error.\n";
-        print STDERR "      This is a known issue of this tool and needs to be investigated.\n";
+        $dict_size_encoded         = lzma_alone_header_field_encode ($dict_size,   4); # 4 bytes (the "Dictionary Size" field), little endian
+        $uncompressed_size_encoded = lzma_alone_header_field_encode ($unpack_size, 8); # 8 bytes (the "Uncompressed Size" field), little endian
+      }
+      else
+      {
+        # this is the fallback case (using some default values):
 
-        print STDERR "\n";
-        print STDERR "      The problem might have to do with this small paragraph hidden in the 7z documentation (quote):\n";
-        print STDERR "      'The reference LZMA Decoder ignores the value of the \"Corrupted\" variable.\n";
-        print STDERR "       So it continues to decode the stream, even if the corruption can be detected\n";
-        print STDERR "       in the Range Decoder. To provide the full compatibility with output of the\n";
-        print STDERR "       reference LZMA Decoder, another LZMA Decoder implementation must also\n";
-        print STDERR "       ignore the value of the \"Corrupted\" variable.'\n";
-        print STDERR "\n";
-        print STDERR "      (taken from the DOC/lzma-specification.txt file of the 7z-SDK: see for instance:\n";
-        print STDERR "       https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt#L343-L347)\n";
+        $dict_size_encoded         = pack ("H*", "00008000");         # "default" dictionary size (2^23 = 0x00800000)
+        $uncompressed_size_encoded = pack ("H*", "ffffffffffffffff"); # means: unknown uncompressed size
       }
 
-      return "";
+      my $lzma_alone_format_header = $property_lclppb . $dict_size_encoded . $uncompressed_size_encoded;
+
+      my $lzma_header = $lzma_alone_format_header . $data;
+
+      my $status = $lz->code ($lzma_header, $decompressed_header);
+
+      if (length ($status) > 0)
+      {
+        if ($try_number == 2)
+        {
+          if ($status != LZMA_STREAM_END)
+          {
+            print STDERR "WARNING: the LZMA header decompression for the file '" . $file_path . "' failed with status: '" . $status . "'\n";
+
+            if ($status eq "Data is corrupt")
+            {
+              print STDERR "\n";
+              print STDERR "INFO: for some reasons, for large LZMA buffers, we sometimes get a 'Data is corrupt' error.\n";
+              print STDERR "      This is a known issue of this tool and needs to be investigated.\n";
+
+              print STDERR "\n";
+              print STDERR "      The problem might have to do with this small paragraph hidden in the 7z documentation (quote):\n";
+              print STDERR "      'The reference LZMA Decoder ignores the value of the \"Corrupted\" variable.\n";
+              print STDERR "       So it continues to decode the stream, even if the corruption can be detected\n";
+              print STDERR "       in the Range Decoder. To provide the full compatibility with output of the\n";
+              print STDERR "       reference LZMA Decoder, another LZMA Decoder implementation must also\n";
+              print STDERR "       ignore the value of the \"Corrupted\" variable.'\n";
+              print STDERR "\n";
+              print STDERR "      (taken from the DOC/lzma-specification.txt file of the 7z-SDK: see for instance:\n";
+              print STDERR "       https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt#L343-L347)\n";
+            }
+
+            return undef;
+          }
+        }
+      }
+
+      last if (length ($decompressed_header) > 0); # if we got some output it seems that it worked just fine
     }
 
     return undef unless (length ($decompressed_header) > 0);
+
+    # in theory we should also check that the length is correct
+    # return undef unless (length ($decompressed_header) == $unpack_size);
 
     # check the decompressed 7zip header
 
@@ -820,9 +823,10 @@ sub extract_hash_from_archive
 
   if ($data_len > $SEVEN_ZIP_HASHCAT_MAX_DATA)
   {
-    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with hashcat ";
-    print STDERR "since the data length in this particular case is too long and it can't be truncated.\n";
-    print STDERR "This happens only in very rare cases\n";
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with hashcat since the data length\n";
+    print STDERR "in this particular case is too long ($data_len of the maximum allowed $SEVEN_ZIP_HASHCAT_MAX_DATA bytes) ";
+    print STDERR "and it can't be truncated.\n";
+    print STDERR "This should happen in only very rare cases\n";
 
     return "";
   }
