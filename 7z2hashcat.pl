@@ -9,13 +9,13 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # philsmd
 
 # version:
-# 0.5
+# 0.6
 
 # date released:
 # April 2015
 
 # date last updated:
-# 9th January 2017
+# 12th January 2017
 
 # dependencies:
 # Compress::Raw::Lzma
