@@ -196,6 +196,32 @@ sub get_uint64
   return $value;
 }
 
+sub read_id
+{
+  my $fp = shift;
+
+  my $id;
+
+  my $num = get_uint64 ($fp);
+
+  return "\x00" if ($num == 0);
+
+  $id = "";
+
+  # convert number to their ASCII code correspondent byte
+
+  while ($num > 0)
+  {
+    my $temp = $num & 0xff;
+
+    $id = chr ($temp) . $id;
+
+    $num >>= 8;
+  }
+
+  return $id;
+}
+
 sub get_boolean_vector
 {
   my $fp = shift;
@@ -653,7 +679,7 @@ sub extract_hash_from_archive
 
     # check the decompressed 7zip header
 
-    my $id = my_read (\$decompressed_header, 1);
+    my $id = read_id (\$decompressed_header);
 
     return undef unless ($id eq $SEVEN_ZIP_HEADER);
 
@@ -674,7 +700,13 @@ sub extract_hash_from_archive
     # return undef unless (defined ($signature_header));
 
     $streams_info = $parsed_header->{'streams_info'};
-    return "" unless (defined ($streams_info));
+
+    if (! defined ($streams_info))
+    {
+      print STDERR "WARNING: the file '" . $file_path . "' does not contain any meaningful data (the so-called streams info), it might only contain a list of empty files\n";
+
+      return "";
+    }
 
     $unpack_info = $streams_info->{'unpack_info'};
     return "" unless (defined ($unpack_info));
@@ -826,7 +858,7 @@ sub extract_hash_from_archive
     print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with hashcat since the data length\n";
     print STDERR "in this particular case is too long ($data_len of the maximum allowed $SEVEN_ZIP_HASHCAT_MAX_DATA bytes) ";
     print STDERR "and it can't be truncated.\n";
-    print STDERR "This should happen in only very rare cases\n";
+    print STDERR "This should only happen in very rare cases\n";
 
     return "";
   }
@@ -958,7 +990,7 @@ sub wait_for_seven_zip_id
 
   while (1)
   {
-    my $new_id = my_read ($fp, 1);
+    my $new_id = read_id ($fp);
 
     if (length ($new_id) != 1)
     {
@@ -1064,7 +1096,7 @@ sub read_seven_zip_pack_info
 
   while (1)
   {
-    my $id = my_read ($fp, 1);
+    my $id = read_id ($fp);
 
     if (length ($id) != 1)
     {
@@ -1333,7 +1365,7 @@ sub read_seven_zip_unpack_info
 
   while (1)
   {
-    my $id = my_read ($fp, 1);
+    my $id = read_id ($fp);
 
     if (length ($id) != 1)
     {
@@ -1432,7 +1464,7 @@ sub read_seven_zip_substreams_info
 
   while (1)
   {
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
 
     if (length ($id) != 1)
     {
@@ -1500,7 +1532,7 @@ sub read_seven_zip_substreams_info
       push (@unpack_sizes, $size);
     }
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
   else
   {
@@ -1598,7 +1630,7 @@ sub read_seven_zip_substreams_info
       skip_seven_zip_data ($fp);
     }
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   my $len_defined = scalar (@digests);
@@ -1654,7 +1686,7 @@ sub read_seven_zip_streams_info
 
   # get the type of streams info (id)
 
-  my $id = my_read ($fp, 1);
+  my $id = read_id ($fp);
 
   if ($id eq $SEVEN_ZIP_PACK_INFO)
   {
@@ -1662,7 +1694,7 @@ sub read_seven_zip_streams_info
 
     return undef unless (defined ($pack_info));
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   if ($id eq $SEVEN_ZIP_UNPACK_INFO)
@@ -1671,7 +1703,7 @@ sub read_seven_zip_streams_info
 
     return undef unless (defined ($unpack_info));
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   if ($id eq $SEVEN_ZIP_SUBSTREAMS_INFO)
@@ -1680,7 +1712,7 @@ sub read_seven_zip_streams_info
 
     return undef unless (defined ($substreams_info));
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
   else
   {
@@ -1744,7 +1776,7 @@ sub read_seven_zip_archive_properties
 
   while (1)
   {
-    my $id = my_read ($fp, 1);
+    my $id = read_id ($fp);
 
     if (length ($id) != 1)
     {
@@ -1812,7 +1844,7 @@ sub read_seven_zip_files_info
 
   # NumFiles
 
-  my $number_files = my_read ($fp, 1);
+  my $number_files = read_id ($fp);
 
   $number_files = ord ($number_files);
 
@@ -1847,7 +1879,7 @@ sub read_seven_zip_files_info
 
   while (1)
   {
-    $property_type = my_read ($fp, 1);
+    $property_type = read_id ($fp);
 
     if (length ($property_type) != 1)
     {
@@ -2042,7 +2074,7 @@ sub read_seven_zip_files_info
 
   # next id should be SEVEN_ZIP_END, but we (and 7-ZIP source code too) do not care
 
-  my $id = my_read ($fp, 1);
+  my $id = read_id ($fp);
 
   # check anti files
 
@@ -2157,7 +2189,7 @@ sub read_seven_zip_header
 
   # get the type of header
 
-  my $id = my_read ($fp, 1);
+  my $id = read_id ($fp);
 
   if ($id eq $SEVEN_ZIP_ARCHIVE_PROPERTIES)
   {
@@ -2168,7 +2200,7 @@ sub read_seven_zip_header
       return undef;
     }
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   if ($id eq $SEVEN_ZIP_ADD_STREAMS_INFO)
@@ -2179,7 +2211,7 @@ sub read_seven_zip_header
 
     # do we need to change the start position here ?
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   if ($id eq $SEVEN_ZIP_MAIN_STREAMS_INFO)
@@ -2188,7 +2220,7 @@ sub read_seven_zip_header
 
     return undef unless (defined ($streams_info));
 
-    $id = my_read ($fp, 1);
+    $id = read_id ($fp);
   }
 
   if ($id eq $SEVEN_ZIP_FILES_INFO)
@@ -2230,7 +2262,7 @@ sub parse_seven_zip_header
 
   # get the type of the header (id)
 
-  my $id = my_read ($fp, 1);
+  my $id = read_id ($fp);
 
   # check if either encoded/packed or encrypted: to get the details we need to check the method
 
