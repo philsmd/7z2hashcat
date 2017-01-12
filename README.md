@@ -28,6 +28,7 @@ You should be able to just run 7z2hashcat.exe if you are a windows user.
 # Command line parameters 
 
 The usage is very simple: you just specify the path to the 7-Zip file as the first command line argument.   
+   
 You can also use multiple files on the command line like this:   
     ./7z2hashcat.pl file1.7z file2.7z  
     ./7z2hashcat.pl \*.7z  
