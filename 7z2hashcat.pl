@@ -33,6 +33,7 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # the fields of this format are separate by the dollar ("$") sign:
 # ("xyz" means that the string xyz is used literally, brackets indicate variables)
 #
+# "$"
 # "7z"
 # "$"
 # [indicator of data compression] # either 0 = uncompressed, 1 = LZMA, 2 = LZMA2
