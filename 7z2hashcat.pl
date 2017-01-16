@@ -9,13 +9,13 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # philsmd
 
 # version:
-# 0.6
+# 0.7
 
 # date released:
 # April 2015
 
 # date last updated:
-# 12th January 2017
+# 16th January 2017
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -161,7 +161,7 @@ sub get_uint32
   return $num;
 }
 
-sub get_real_uint64
+sub get_uint64
 {
   my $fp = shift;
 
@@ -174,56 +174,62 @@ sub get_real_uint64
   return $bytes, $num;
 }
 
-sub get_uint64
+sub read_number
 {
   my $fp = shift;
 
-  my $first_byte = my_read ($fp, 1);
+  my $b = ord (my_read ($fp, 1));
 
-  my $bytes;
-  my $v = ord ($first_byte);
-  my $mask = 0b10000000;
-
-  for (my $i = 0; $i < 8; $i++)
+  if (($b & 0x80) == 0)
   {
-    if (($v & $mask) == 0)
-    {
-      my $value = 0;
-
-      if ($i != 0)
-      {
-        $bytes = my_read ($fp, $i);
-
-        for (my $j = 0; $j < $i; $j++)
-        {
-          my $next_byte = substr ($bytes, $j, 1);
-
-          $value |= ord ($next_byte) << (8 * $j);
-        }
-      }
-
-      my $upper_part = $v & ($mask - 1);
-
-      return $value + ($upper_part << ($i * 8));
-    }
-
-    $mask >>= 1
+    return $b;
   }
 
-  # special case, read 8 bytes and get the value (similar to case 7)
+  my $value = ord (my_read ($fp, 1));
 
-  $bytes = my_read ($fp, 8);
-
-  my $value = 0;
-
-  for (my $j = 0; $j < 8; $j++)
+  for (my $i = 1; $i < 8; $i++)
   {
-    my $next_byte = substr ($bytes, $j, 1);
+    my $mask = 0x80 >> $i;
 
-    $value |= ord ($next_byte) << (8 * $j);
+    if (($b & $mask) == 0)
+    {
+      my $high = $b & ($mask - 1);
+
+      $value |= ($high << ($i * 8));
+
+      return $value;
+    }
+
+    my $next = ord (my_read ($fp, 1));
+
+    $value |= ($next << ($i * 8));
   }
 
   return $value;
+}
+
+sub num_to_id
+{
+  my $num = shift;
+
+  # special case:
+
+  return "\x00" if ($num == 0);
+
+  # normal case:
+
+  my $id = "";
+
+  while ($num > 0)
+  {
+    my $value = $num & 0xff;
+
+    $id = chr ($value) . $id;
+
+    $num >>= 8;
+  }
+
+  return $id;
 }
 
 sub read_id
@@ -232,24 +238,11 @@ sub read_id
 
   my $id;
 
-  my $num = get_uint64 ($fp);
-
-  return "\x00" if ($num == 0);
-
-  $id = "";
+  my $num = read_number ($fp);
 
   # convert number to their ASCII code correspondent byte
 
-  while ($num > 0)
-  {
-    my $temp = $num & 0xff;
-
-    $id = chr ($temp) . $id;
-
-    $num >>= 8;
-  }
-
-  return $id;
+  return num_to_id ($num);
 }
 
 sub get_boolean_vector
@@ -987,8 +980,8 @@ sub read_seven_zip_signature_header
 
   # StartHeader
 
-  my $next_header_offset = get_real_uint64 ($fp);
-  my $next_header_size   = get_real_uint64 ($fp);
+  my $next_header_offset = get_uint64 ($fp);
+  my $next_header_size   = get_uint64 ($fp);
 
   my_read ($fp, 4); # next header CRC
 
@@ -1028,11 +1021,6 @@ sub wait_for_seven_zip_id
   while (1)
   {
     my $new_id = read_id ($fp);
-
-    if (length ($new_id) != 1)
-    {
-      return 0;
-    }
 
     if ($new_id eq $id)
     {
@@ -1103,11 +1091,11 @@ sub read_seven_zip_pack_info
 
   # PackPos
 
-  my $pack_pos = get_uint64 ($fp);
+  my $pack_pos = read_number  ($fp);
 
   # NumPackStreams
 
-  my $number_pack_streams = get_uint64 ($fp);
+  my $number_pack_streams = read_number ($fp);
 
   # must be "size" id
 
@@ -1120,7 +1108,7 @@ sub read_seven_zip_pack_info
 
   for (my $i = 0; $i < $number_pack_streams; $i++)
   {
-    $pack_sizes[$i] = get_uint64 ($fp);
+    $pack_sizes[$i] = read_number ($fp);
   }
 
   $pack_info = {
@@ -1134,11 +1122,6 @@ sub read_seven_zip_pack_info
   while (1)
   {
     my $id = read_id ($fp);
-
-    if (length ($id) != 1)
-    {
-      return undef;
-    }
 
     if ($id eq $SEVEN_ZIP_END)
     {
@@ -1177,7 +1160,7 @@ sub read_seven_zip_folders
 
   # NumCoders
 
-  my $number_coders = get_uint64 ($fp);
+  my $number_coders = read_number ($fp);
 
   # loop
 
@@ -1216,8 +1199,8 @@ sub read_seven_zip_folders
 
     if (($main_byte & 0x10) != 0)
     {
-      $number_input_streams  = get_uint64 ($fp);
-      $number_output_streams = get_uint64 ($fp);
+      $number_input_streams  = read_number ($fp);
+      $number_output_streams = read_number ($fp);
     }
 
     $sum_input_streams  += $number_input_streams;
@@ -1229,7 +1212,7 @@ sub read_seven_zip_folders
 
     if (($main_byte & 0x020) != 0)
     {
-      my $property_size = get_uint64 ($fp);
+      my $property_size = read_number ($fp);
 
       $attributes = my_read ($fp, $property_size);
     }
@@ -1257,7 +1240,7 @@ sub read_seven_zip_folders
     {
       # input
 
-      my $index_input = get_uint64 ($fp);
+      my $index_input = read_number ($fp);
 
       if ($input_stream_used[$index_input] == 1)
       {
@@ -1268,7 +1251,7 @@ sub read_seven_zip_folders
 
       # output
 
-      my $index_output = get_uint64 ($fp);
+      my $index_output = read_number ($fp);
 
       if ($output_stream_used[$index_output] == 1)
       {
@@ -1292,7 +1275,7 @@ sub read_seven_zip_folders
       {
         # we can ignore this
 
-        get_uint64 ($fp); # my $index = get_uint64 ($fp);
+        read_number ($fp); # my $index = read_number ($fp);
       }
     }
 
@@ -1352,7 +1335,7 @@ sub read_seven_zip_unpack_info
 
   # NumFolders
 
-  $number_folders = get_uint64 ($fp);
+  $number_folders = read_number ($fp);
 
   # External
 
@@ -1380,7 +1363,7 @@ sub read_seven_zip_unpack_info
     }
     elsif ($external eq $SEVEN_ZIP_EXTERNAL)
     {
-      $datastream_indices[$i] = get_uint64 ($fp);
+      $datastream_indices[$i] = read_number ($fp);
     }
     else
     {
@@ -1395,7 +1378,7 @@ sub read_seven_zip_unpack_info
 
   for (my $i = 0; $i < $sum_coders_output_streams; $i++)
   {
-    $unpack_sizes[$i] = get_uint64 ($fp);
+    $unpack_sizes[$i] = read_number ($fp);
   }
 
   # read remaining data
@@ -1403,11 +1386,6 @@ sub read_seven_zip_unpack_info
   while (1)
   {
     my $id = read_id ($fp);
-
-    if (length ($id) != 1)
-    {
-      return undef;
-    }
 
     if ($id eq $SEVEN_ZIP_END)
     {
@@ -1503,16 +1481,11 @@ sub read_seven_zip_substreams_info
   {
     $id = read_id ($fp);
 
-    if (length ($id) != 1)
-    {
-      return undef;
-    }
-
     if ($id eq $SEVEN_ZIP_NUM_UNPACK_STREAM)
     {
       for (my $i = 0; $i < $number_folders; $i++)
       {
-        $number_unpack_streams[$i] = get_uint64 ($fp);
+        $number_unpack_streams[$i] = read_number ($fp);
       }
 
       next;
@@ -1548,7 +1521,7 @@ sub read_seven_zip_substreams_info
 
       for (my $j = 1; $j < $number_substreams; $j++)
       {
-        my $size = get_uint64 ($fp);
+        my $size = read_number ($fp);
 
         push (@unpack_sizes, $size);
 
@@ -1815,11 +1788,6 @@ sub read_seven_zip_archive_properties
   {
     my $id = read_id ($fp);
 
-    if (length ($id) != 1)
-    {
-      return 0;
-    }
-
     if ($id eq $SEVEN_ZIP_END)
     {
       return 1;
@@ -1860,7 +1828,7 @@ sub get_uint64_defined_vector
 
     if ($defined != 0)
     {
-      $value = get_real_uint64 ($fp);
+      $value = get_uint64 ($fp);
     }
 
     $values[$i] = $value;
@@ -1881,9 +1849,7 @@ sub read_seven_zip_files_info
 
   # NumFiles
 
-  my $number_files = read_id ($fp);
-
-  $number_files = ord ($number_files);
+  my $number_files = read_number ($fp);
 
   # init file
 
@@ -1912,27 +1878,20 @@ sub read_seven_zip_files_info
 
   # loop over all properties
 
-  my $property_type;
-
   while (1)
   {
-    $property_type = read_id ($fp);
+    my $property_type_val = read_number ($fp);
 
-    if (length ($property_type) != 1)
-    {
-      return undef;
-    }
+    my $property_type = num_to_id ($property_type_val);
 
     if ($property_type eq $SEVEN_ZIP_END)
     {
       last;
     }
 
-    my $property_type_val = ord ($property_type);
-
     # Size
 
-    my $size = get_uint64 ($fp);
+    my $size = read_number ($fp);
 
     # check and act according to the type of property found
 
