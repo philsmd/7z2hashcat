@@ -125,6 +125,8 @@ sub usage
   print STDERR "Usage: $prog_name <7-Zip file>...\n";
 }
 
+my $memory_buffer_read_offset = 0;
+
 sub my_read
 {
   my $input  = shift;
@@ -140,11 +142,7 @@ sub my_read
   }
   else
   {
-    $output_buffer = substr ($$input, 0, $length);
-
-    # remove the bytes we read here
-
-    $$input = substr ($$input, $length);
+    $output_buffer = substr ($$input, $memory_buffer_read_offset, $length);
   }
 
   return $output_buffer;
@@ -701,6 +699,8 @@ sub extract_hash_from_archive
     # return undef unless (length ($decompressed_header) == $unpack_size);
 
     # check the decompressed 7zip header
+
+    $memory_buffer_read_offset = 0; # decompressed_header is a new memory buffer (which uses a offset to speed things up)
 
     my $id = read_id (\$decompressed_header);
 
