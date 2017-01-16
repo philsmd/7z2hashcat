@@ -143,6 +143,8 @@ sub my_read
   else
   {
     $output_buffer = substr ($$input, $memory_buffer_read_offset, $length);
+
+    $memory_buffer_read_offset += $length;
   }
 
   return $output_buffer;
