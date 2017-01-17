@@ -67,10 +67,12 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 #
 
 # This field is the first field after the hash signature (i.e. after "$7z$).
-# Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT, the value will be 128.
+# Whenever the data was longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT and the data could be truncated due to the padding attack,
+# the value of this field will be set to 128.
+#
 # If no truncation is used:
 # - the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum
-# - all values different from 128, but greater than 0 indicate that the data must be decompressed as follows:
+# - all values different from 128, but greater than 0, indicate that the data must be decompressed as follows:
 #   - 1 means that the data must be decompressed using the LZMA1 decompressor
 #   - 2 means that the data must be decompressed using the LZMA2 decompressor
 #   - 3 means that the data must be decompressed using the PPMD decompressor
