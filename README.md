@@ -44,7 +44,7 @@ You do not need to understand or know all this information for just cracking has
   
 7z2hashcat outputs one hash per line. Warning and error messages are outputted to STDERR and therefore shouldn't interfere with the outputted "hashes".  
   
-Each hash line has several fields but some fields can be missing within some hash lines. This depends whether the fields are needed or not.  
+Each hash line has several fields separated by the dollar character ($), but some fields can sometimes be omitted (indicated by "always outputted: no" in the table below). This depends whether the fields are needed or not.  
   
 This is an overview of the output:  
   
