@@ -36,7 +36,7 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # "$"
 # "7z"
 # "$"
-# [indicator of data compression] # either 0 = uncompressed, 1 = LZMA, 2 = LZMA2
+# [data type indicator]           # see "Explanation of the data type indicator" below
 # "$"
 # [cost factor]                   # means: 2 ^ [cost factor] iterations
 # "$"
@@ -52,15 +52,40 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # "$"
 # [length of encrypted data]      # the encrypted data length in bytes
 # "$"
-# [length of decompressed data]   # the decompressed data length in bytes
+# [length of decrypted data]      # the decrypted data length in bytes
 # "$"
 # [encrypted data]                # the encrypted (and possibly also compressed data)
+
+# in case the data was not truncated and a decompression step is needed to verify the CRC32, these fields are appended:
+# "$"
+# [length of data for CRC32]      # the length of the first "file" needed to verify the CRC32 checksum
+# "$"
+# [coder attributes]              # most of the coders/decompressors need some attributes (e.g. encoded lc, pb, lp, dictSize values);
+
+#
+# Explanation of the data type indicator
+#
+
+# This field is the first field after the hash signature (i.e. after "$7z$).
+# Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT, the value will be 128.
+# If no truncation is used:
+# - the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum
+# - all values different from 128, but greater than 0 indicate that the data must be decompressed as follows:
+#   - 1 means that the data must be decompressed using the LZMA1 decompressor
+#   - 2 means that the data must be decompressed using the LZMA2 decompressor
+#   - 3 means that the data must be decompressed using the PPMD decompressor
+#   - 4 means that the data must be decompressed using the BCJ decompressor
+#   - 5 means that the data must be decompressed using the BCJ2 decompressor
+#   - 6 means that the data must be decompressed using the BZIP2 decompressor
+#   - 7 means that the data must be decompressed using the DEFLATE decompressor
+
+# Truncated data can only be verified using the padding attack and therefore combinations between truncation + a compressor are not allowed.
+# Therefore, whenever the value is 128 or 0, neither coder attributes nor the length of the data for the CRC32 check is within the output.
+# On the other hand, for all values above or equal 1 and smaller than 128, both coder attributes and the length for CRC32 check is in the output.
 
 #
 # Constants
 #
-
-my $SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING = 1;
 
 my $LZMA2_MIN_COMPRESSED_LEN = 16; # the raw data (decrypted) needs to be at least: 3 + 1 + 1, header (start + size) + at least one byte of data + end
                                    # therefore we need to have at least one AES BLOCK (128 bits = 16 bytes)
@@ -103,16 +128,43 @@ my $SEVEN_ZIP_FILE_NAME_END      = "\x00\x00";
 
 # codec
 
-my $SEVEN_ZIP_AES               = "\x06\xf1\x07\x01";
+my $SEVEN_ZIP_AES               = "\x06\xf1\x07\x01"; # all the following codec values are from CPP/7zip/Archive/7z/7zHeader.h
+
+my $SEVEN_ZIP_LZMA1             = "\x03\x01\x01";
 my $SEVEN_ZIP_LZMA2             = "\x21";
-my $SEVEN_ZIP_LZMA              = "\x03\x01\x01";
+my $SEVEN_ZIP_PPMD              = "\x03\x04\x01";
+my $SEVEN_ZIP_BCJ               = "\x03\x03\x01\x03";
+my $SEVEN_ZIP_BCJ2              = "\x03\x03\x01\x1b";
+my $SEVEN_ZIP_BZIP2             = "\x04\x02\x02";
+my $SEVEN_ZIP_DEFLATE           = "\x04\x01\x08";
 
 # hash format
 
 my $SEVEN_ZIP_HASH_SIGNATURE    = "\$7z\$";
-my $SEVEN_ZIP_HASHCAT_MAX_DATA  = 768;
 my $SEVEN_ZIP_DEFAULT_POWER     = 19;
 my $SEVEN_ZIP_DEFAULT_IV        = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+my $SEVEN_ZIP_UNCOMPRESSED       =   0;
+my $SEVEN_ZIP_LZMA1_COMPRESSED   =   1;
+my $SEVEN_ZIP_LZMA2_COMPRESSED   =   2;
+my $SEVEN_ZIP_PPMD_COMPRESSED    =   3;
+my $SEVEN_ZIP_BCJ_COMPRESSED     =   4;
+my $SEVEN_ZIP_BCJ2_COMPRESSED    =   5;
+my $SEVEN_ZIP_BZIP2_COMPRESSED   =   6;
+my $SEVEN_ZIP_DEFLATE_COMPRESSED =   7;
+my $SEVEN_ZIP_TRUNCATED          = 128; # (0x80 or 0b10000000)
+
+my %SEVEN_ZIP_COMPRESSOR_NAMES   = (1 => "LZMA1", 2 => "LZMA2", 3 => "PPMD", 4 => "BCJ", 5 => "BCJ2", 6 => "BZIP2",
+                                    7 => "DEFLATE");
+
+# cracker specific stuff
+
+my $SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING = 1;
+
+my $PASSWORD_RECOVERY_TOOL_NAME = "hashcat";
+my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 768;              # this value should always be >= 32
+my @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS = ();  # within this list we only need values ranging from 1 to 7
+                                                          # i.e. SEVEN_ZIP_LZMA1_COMPRESSED to SEVEN_ZIP_DEFLATE_COMPRESSED
 
 #
 # Helper functions
@@ -606,7 +658,7 @@ sub extract_hash_from_archive
 
   # if it is lzma compressed, we need to decompress it first
 
-  if ($codec_id eq $SEVEN_ZIP_LZMA)
+  if ($codec_id eq $SEVEN_ZIP_LZMA1)
   {
     # get the sizes
 
@@ -844,7 +896,7 @@ sub extract_hash_from_archive
 
   # special case: we can truncate the data_len and use 32 bytes in total for both iv + data (last 32 bytes of data)
 
-  my $special_attack_possible = 0;
+  my $is_truncated = 0;
 
   my $data;
 
@@ -854,7 +906,7 @@ sub extract_hash_from_archive
 
     if ($length_difference > 3)
     {
-      if ($data_len >= 32)
+      if ($data_len > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
       {
         seek $fp, $data_len - 32, 1;
 
@@ -865,9 +917,9 @@ sub extract_hash_from_archive
         $data_len = 16;
 
         $unpack_size %= 16;
-      }
 
-      $special_attack_possible = 1;
+        $is_truncated = 1;
+      }
     }
   }
 
@@ -878,17 +930,18 @@ sub extract_hash_from_archive
 
   return undef unless (length ($data) == $data_len);
 
-  if ($data_len > $SEVEN_ZIP_HASHCAT_MAX_DATA)
+  if ($data_len > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
   {
-    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with hashcat since the data length\n";
-    print STDERR "in this particular case is too long ($data_len of the maximum allowed $SEVEN_ZIP_HASHCAT_MAX_DATA bytes) ";
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the data length\n";
+    print STDERR "in this particular case is too long ($data_len of the maximum allowed $PASSWORD_RECOVERY_TOOL_DATA_LIMIT bytes) ";
     print STDERR "and it can't be truncated.\n";
-    print STDERR "This should only happen in very rare cases\n";
+    print STDERR "This should only happen in very rare cases.\n";
 
     return "";
   }
 
-  my $compression_indicator = 0; # 0 = uncompressed, 1 = LZMA, 2 = LZMA2
+  my $type_of_compression    = $SEVEN_ZIP_UNCOMPRESSED;
+  my $compression_attributes = "";
 
   for (my $coder_pos = $coder_id; $coder_pos < $number_coders; $coder_pos++)
   {
@@ -897,13 +950,40 @@ sub extract_hash_from_archive
 
     $codec_id = $coder->{'codec_id'};
 
-    if ($codec_id eq $SEVEN_ZIP_LZMA)
+    if ($codec_id eq $SEVEN_ZIP_LZMA1)
     {
-      $compression_indicator = 1;
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_LZMA1_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_LZMA2)
     {
-      $compression_indicator = 2;
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_LZMA2_COMPRESSED;
+    }
+    elsif ($codec_id eq $SEVEN_ZIP_PPMD_COMPRESSED)
+    {
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_PPMD_COMPRESSED;
+    }
+    elsif ($codec_id eq $SEVEN_ZIP_BCJ_COMPRESSED)
+    {
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_BCJ_COMPRESSED;
+    }
+    elsif ($codec_id eq $SEVEN_ZIP_BCJ2_COMPRESSED)
+    {
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_BCJ2_COMPRESSED;
+    }
+    elsif ($codec_id eq $SEVEN_ZIP_BZIP2_COMPRESSED)
+    {
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_BZIP2_COMPRESSED;
+    }
+    elsif ($codec_id eq $SEVEN_ZIP_DEFLATE_COMPRESSED)
+    {
+      $compression_attributes = unpack ("H*", $coder->{'attributes'});
+      $type_of_compression    = $SEVEN_ZIP_DEFLATE_COMPRESSED;
     }
   }
 
@@ -911,41 +991,44 @@ sub extract_hash_from_archive
 
   if ($SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING == 1)
   {
-    if ($special_attack_possible == 0)
+    if ($is_truncated == 0)
     {
-      if ($compression_indicator > 0)
+      if (grep ("/^$type_of_compression$/", @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS) == 0)
       {
         print STDERR "WARNING: to correctly verify the CRC checksum of the data contained within the file '". $file_path . "',\n";
-        print STDERR "the data must be decompressed using ";
-
-        if ($compression_indicator == 1)
-        {
-          print STDERR "LZMA";
-        }
-        else
-        {
-          print STDERR "LZMA2";
-        }
-
+        print STDERR "the data must be decompressed using " . $SEVEN_ZIP_COMPRESSOR_NAMES{$type_of_compression};
         print STDERR " after the decryption step.\n";
         print STDERR "\n";
-
-        print STDERR "Some cracking tools currently do not support the decompression step after decrypting the data.\n";
+        print STDERR "$PASSWORD_RECOVERY_TOOL_NAME currently does not support this particular decompression.\n";
         print STDERR "\n";
 
-        if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
+        if ($type_of_compression == $SEVEN_ZIP_LZMA2_COMPRESSED) # this special case should only work for LZMA2 
         {
-          print STDERR "INFO: it might still be possible to crack the password of this archive since the data part seems\n";
-          print STDERR "to be very short and therefore it might use the LZMA2 uncompressed chunk feature\n";
-          print STDERR "\n";
+          if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
+          {
+            print STDERR "INFO: it might still be possible to crack the password of this archive since the data part seems\n";
+            print STDERR "to be very short and therefore it might use the LZMA2 uncompressed chunk feature\n";
+            print STDERR "\n";
+          }
         }
       }
     }
   }
 
+  my $type_of_data = 0; # this variable will hold the "number" after the "$7z$" hash signature
+
+  if ($is_truncated == 1)
+  {
+    $type_of_data = $SEVEN_ZIP_TRUNCATED; # note: this means that we neither need the crc_len, nor the coder attributes
+  }
+  else
+  {
+    $type_of_data = $type_of_compression;
+  }
+
   $hash_buf = sprintf ("%s%i\$%i\$%i\$%s\$%i\$%s\$%i\$%i\$%i\$%s",
     $SEVEN_ZIP_HASH_SIGNATURE,
-    $compression_indicator,
+    $type_of_data,
     $number_cycles_power,
     $salt_len,
     unpack ("H*", $salt_buf),
@@ -955,6 +1038,16 @@ sub extract_hash_from_archive
     $data_len,
     $unpack_size,
     unpack ("H*", $data)
+  );
+
+  return $hash_buf if ($type_of_data == $SEVEN_ZIP_UNCOMPRESSED);
+  return $hash_buf if ($type_of_data == $SEVEN_ZIP_TRUNCATED);
+
+  my $crc_len = $substreams_info->{'unpack_sizes'}[0]; # we always stick to the first file here
+
+  $hash_buf .= sprintf ("\$%i\$%s",
+    $crc_len,
+    $compression_attributes
   );
 
   return $hash_buf;
