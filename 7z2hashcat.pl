@@ -897,6 +897,7 @@ sub extract_hash_from_archive
   # special case: we can truncate the data_len and use 32 bytes in total for both iv + data (last 32 bytes of data)
 
   my $is_truncated = 0;
+  my $padding_attack_possible = 0;
 
   my $data;
 
@@ -920,6 +921,8 @@ sub extract_hash_from_archive
 
         $is_truncated = 1;
       }
+
+      $padding_attack_possible = 1;
     }
   }
 
@@ -987,7 +990,7 @@ sub extract_hash_from_archive
     }
   }
 
-  # show a warning if LZMA/LZMA2 decompression is currently not supported by the cracker
+  # show a warning if the decompression algorithm is currently not supported by the cracker
 
   if ($SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING == 1)
   {
@@ -999,10 +1002,18 @@ sub extract_hash_from_archive
         print STDERR "the data must be decompressed using " . $SEVEN_ZIP_COMPRESSOR_NAMES{$type_of_compression};
         print STDERR " after the decryption step.\n";
         print STDERR "\n";
-        print STDERR "$PASSWORD_RECOVERY_TOOL_NAME currently does not support this particular decompression.\n";
+        print STDERR "$PASSWORD_RECOVERY_TOOL_NAME currently does not support this particular decompression algorithm.\n";
         print STDERR "\n";
 
-        if ($type_of_compression == $SEVEN_ZIP_LZMA2_COMPRESSED) # this special case should only work for LZMA2 
+        if ($padding_attack_possible == 1)
+        {
+          print STDERR "INFO: However there is also some good news in this particular case.\n";
+          print STDERR "Since AES-CBC is used by the 7z algorithm and the data length of this file allows a padding attack,\n";
+          print STDERR "the password recovery tool might be able to use that to verify the correctness of password candidates.\n";
+          print STDERR "By using this attack there might of course be a higher probability of false positives.\n";
+          print STDERR "\n";
+        }
+        elsif ($type_of_compression == $SEVEN_ZIP_LZMA2_COMPRESSED) # this special case should only work for LZMA2
         {
           if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
           {
