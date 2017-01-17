@@ -996,7 +996,7 @@ sub extract_hash_from_archive
 
   if ($SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING == 1)
   {
-    if ($type_of_compression != 0)
+    if ($type_of_compression != $SEVEN_ZIP_UNCOMPRESSED)
     {
       if ($is_truncated == 0)
       {
@@ -1031,7 +1031,7 @@ sub extract_hash_from_archive
     }
   }
 
-  my $type_of_data = 0; # this variable will hold the "number" after the "$7z$" hash signature
+  my $type_of_data = $SEVEN_ZIP_UNCOMPRESSED; # this variable will hold the "number" after the "$7z$" hash signature
 
   if ($is_truncated == 1)
   {
