@@ -948,12 +948,10 @@ sub extract_hash_from_archive
   my $type_of_compression    = $SEVEN_ZIP_UNCOMPRESSED;
   my $compression_attributes = "";
 
-  for (my $coder_pos = $coder_id; $coder_pos < $number_coders; $coder_pos++)
+  for (my $coder_pos = $coder_id + 1; $coder_pos < $number_coders; $coder_pos++)
   {
     $coder = $folder->{'coders'}[$coder_pos];
     last unless (defined ($coder));
-
-    $codec_id = $coder->{'codec_id'};
 
     if ($codec_id eq $SEVEN_ZIP_LZMA1)
     {
@@ -965,27 +963,27 @@ sub extract_hash_from_archive
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_LZMA2_COMPRESSED;
     }
-    elsif ($codec_id eq $SEVEN_ZIP_PPMD_COMPRESSED)
+    elsif ($codec_id eq $SEVEN_ZIP_PPMD)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_PPMD_COMPRESSED;
     }
-    elsif ($codec_id eq $SEVEN_ZIP_BCJ_COMPRESSED)
+    elsif ($codec_id eq $SEVEN_ZIP_BCJ)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_BCJ_COMPRESSED;
     }
-    elsif ($codec_id eq $SEVEN_ZIP_BCJ2_COMPRESSED)
+    elsif ($codec_id eq $SEVEN_ZIP_BCJ2)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_BCJ2_COMPRESSED;
     }
-    elsif ($codec_id eq $SEVEN_ZIP_BZIP2_COMPRESSED)
+    elsif ($codec_id eq $SEVEN_ZIP_BZIP2)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_BZIP2_COMPRESSED;
     }
-    elsif ($codec_id eq $SEVEN_ZIP_DEFLATE_COMPRESSED)
+    elsif ($codec_id eq $SEVEN_ZIP_DEFLATE)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
       $type_of_compression    = $SEVEN_ZIP_DEFLATE_COMPRESSED;
@@ -996,32 +994,35 @@ sub extract_hash_from_archive
 
   if ($SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING == 1)
   {
-    if ($is_truncated == 0)
+    if ($type_of_compression != 0)
     {
-      if (grep ("/^$type_of_compression$/", @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS) == 0)
+      if ($is_truncated == 0)
       {
-        print STDERR "WARNING: to correctly verify the CRC checksum of the data contained within the file '". $file_path . "',\n";
-        print STDERR "the data must be decompressed using " . $SEVEN_ZIP_COMPRESSOR_NAMES{$type_of_compression};
-        print STDERR " after the decryption step.\n";
-        print STDERR "\n";
-        print STDERR "$PASSWORD_RECOVERY_TOOL_NAME currently does not support this particular decompression algorithm.\n";
-        print STDERR "\n";
-
-        if ($padding_attack_possible == 1)
+        if (grep ("/^$type_of_compression$/", @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS) == 0)
         {
-          print STDERR "INFO: However there is also some good news in this particular case.\n";
-          print STDERR "Since AES-CBC is used by the 7z algorithm and the data length of this file allows a padding attack,\n";
-          print STDERR "the password recovery tool might be able to use that to verify the correctness of password candidates.\n";
-          print STDERR "By using this attack there might of course be a higher probability of false positives.\n";
+          print STDERR "WARNING: to correctly verify the CRC checksum of the data contained within the file '". $file_path . "',\n";
+          print STDERR "the data must be decompressed using " . $SEVEN_ZIP_COMPRESSOR_NAMES{$type_of_compression};
+          print STDERR " after the decryption step.\n";
           print STDERR "\n";
-        }
-        elsif ($type_of_compression == $SEVEN_ZIP_LZMA2_COMPRESSED) # this special case should only work for LZMA2
-        {
-          if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
+          print STDERR "$PASSWORD_RECOVERY_TOOL_NAME currently does not support this particular decompression algorithm.\n";
+          print STDERR "\n";
+
+          if ($padding_attack_possible == 1)
           {
-            print STDERR "INFO: it might still be possible to crack the password of this archive since the data part seems\n";
-            print STDERR "to be very short and therefore it might use the LZMA2 uncompressed chunk feature\n";
+            print STDERR "INFO: However there is also some good news in this particular case.\n";
+            print STDERR "Since AES-CBC is used by the 7z algorithm and the data length of this file allows a padding attack,\n";
+            print STDERR "the password recovery tool might be able to use that to verify the correctness of password candidates.\n";
+            print STDERR "By using this attack there might of course be a higher probability of false positives.\n";
             print STDERR "\n";
+          }
+          elsif ($type_of_compression == $SEVEN_ZIP_LZMA2_COMPRESSED) # this special case should only work for LZMA2
+          {
+            if ($data_len <= $LZMA2_MIN_COMPRESSED_LEN)
+            {
+              print STDERR "INFO: it might still be possible to crack the password of this archive since the data part seems\n";
+              print STDERR "to be very short and therefore it might use the LZMA2 uncompressed chunk feature\n";
+              print STDERR "\n";
+            }
           }
         }
       }
