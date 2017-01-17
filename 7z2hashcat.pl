@@ -953,6 +953,8 @@ sub extract_hash_from_archive
     $coder = $folder->{'coders'}[$coder_pos];
     last unless (defined ($coder));
 
+    $codec_id = $coder->{'codec_id'};
+
     if ($codec_id eq $SEVEN_ZIP_LZMA1)
     {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
