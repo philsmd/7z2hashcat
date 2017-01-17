@@ -970,38 +970,38 @@ sub extract_hash_from_archive
 
     if ($codec_id eq $SEVEN_ZIP_LZMA1)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_LZMA1_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_LZMA1_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_LZMA2)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_LZMA2_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_LZMA2_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_PPMD)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_PPMD_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_PPMD_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_BCJ)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_BCJ_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_BCJ_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_BCJ2)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_BCJ2_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_BCJ2_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_BZIP2)
     {
-      $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_BZIP2_COMPRESSED;
+      $type_of_compression = $SEVEN_ZIP_BZIP2_COMPRESSED;
     }
     elsif ($codec_id eq $SEVEN_ZIP_DEFLATE)
     {
+      $type_of_compression = $SEVEN_ZIP_DEFLATE_COMPRESSED;
+    }
+
+    if ($type_of_compression != $SEVEN_ZIP_UNCOMPRESSED)
+    {
       $compression_attributes = unpack ("H*", $coder->{'attributes'});
-      $type_of_compression    = $SEVEN_ZIP_DEFLATE_COMPRESSED;
+
+      last; # no need to continue looping, we found what we needed (and 2+ compressions are never combined by the 7z format)
     }
   }
 
