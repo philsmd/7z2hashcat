@@ -843,7 +843,7 @@ sub extract_hash_from_archive
       last unless (defined ($coder));
     }
 
-    # if not AES we can't do anything
+    # we unfortunately can't do anything if no AES encrypted data was found
 
     if ($codec_id ne $SEVEN_ZIP_AES)
     {
