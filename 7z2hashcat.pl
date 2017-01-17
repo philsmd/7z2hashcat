@@ -576,6 +576,13 @@ sub lzma_alone_header_field_encode
   return $value;
 }
 
+sub show_empty_streams_info_warning
+{
+  my $file_path = shift;
+
+  print STDERR "WARNING: the file '" . $file_path . "' does not contain any meaningful data (the so-called streams info), it might only contain a list of empty files.\n";
+}
+
 sub extract_hash_from_archive
 {
   my $fp = shift;
@@ -596,7 +603,13 @@ sub extract_hash_from_archive
   return undef unless (defined ($signature_header));
 
   my $streams_info = $parsed_header->{'streams_info'};
-  return undef unless (defined ($streams_info));
+
+  if (! defined ($streams_info))
+  {
+    show_empty_streams_info_warning ($file_path);
+
+    return undef;
+  }
 
   my $unpack_info = $streams_info->{'unpack_info'};
   return undef unless (defined ($unpack_info));
@@ -782,7 +795,7 @@ sub extract_hash_from_archive
 
     if (! defined ($streams_info))
     {
-      print STDERR "WARNING: the file '" . $file_path . "' does not contain any meaningful data (the so-called streams info), it might only contain a list of empty files\n";
+      show_empty_streams_info_warning ($file_path);
 
       return "";
     }
