@@ -162,7 +162,7 @@ my %SEVEN_ZIP_COMPRESSOR_NAMES   = (1 => "LZMA1", 2 => "LZMA2", 3 => "PPMD", 4 =
 my $SHOW_LZMA_DECOMPRESS_AFTER_DECRYPT_WARNING = 1;
 
 my $PASSWORD_RECOVERY_TOOL_NAME = "hashcat";
-my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 768;              # this value should always be >= 32
+my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 768;              # hexadecimal output value. This value should always be >= 64
 my @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS = ();  # within this list we only need values ranging from 1 to 7
                                                           # i.e. SEVEN_ZIP_LZMA1_COMPRESSED to SEVEN_ZIP_DEFLATE_COMPRESSED
 
@@ -906,7 +906,7 @@ sub extract_hash_from_archive
 
     if ($length_difference > 3)
     {
-      if ($data_len > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
+      if ($data_len > ($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2))
       {
         seek $fp, $data_len - 32, 1;
 
@@ -930,10 +930,10 @@ sub extract_hash_from_archive
 
   return undef unless (length ($data) == $data_len);
 
-  if ($data_len > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
+  if ($data_len > ($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2))
   {
     print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the data length\n";
-    print STDERR "in this particular case is too long ($data_len of the maximum allowed $PASSWORD_RECOVERY_TOOL_DATA_LIMIT bytes) ";
+    print STDERR "in this particular case is too long ($data_len of the maximum allowed " .($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2). " bytes) ";
     print STDERR "and it can't be truncated.\n";
     print STDERR "This should only happen in very rare cases.\n";
 
