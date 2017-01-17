@@ -64,9 +64,11 @@ This is an overview of the output:
 | $ | [length of data for CRC32] | no               | optional field indicating the length of the first "file" in case decompression needs to be used |
 | $ | [coder attributes]         | no               | optional field indicating the attributes for the decompressor                                   |
 
-The data type indicator is a special field and needs some further explanation:  
+The **data type indicator** is a special field and needs some further explanation:  
+  
 This field is the first field after the hash signature (i.e. after "$7z$).  
-Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT (see 7z2hashcat.pl) and a AES padding attack is possible, the value will be 128 and [data] will be truncated (a warning message will be shown in case the data limit was reached but padding attack is not applicable).  
+Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT (see 7z2hashcat.pl) and an AES padding attack is possible, the value will be 128 and [data] will be truncated (a warning message will be shown in case the data limit was reached but padding attack is not applicable).  
+  
 If no truncation is used/possible:  
 - the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum  
 - all values different from 128, but greater than 0 indicate that the data must be decompressed as follows:  
@@ -79,7 +81,9 @@ If no truncation is used/possible:
   - 7 means that the data must be decompressed using the DEFLATE decompressor  
 
 Truncated data can only be verified using the padding attack and therefore combinations between truncation and a compressor are not meaningful/allowed.  
+  
 Therefore, whenever the value is 128 or 0, neither coder attributes nor the length of the data for the CRC32 check is within the output.  
+  
 On the other hand, for all values above or equal 1 and smaller than 128, both coder attributes and the length of the decompressed data for CRC32 check is within the output.  
     
 The following table should sum it up pretty nicely:  
