@@ -5,8 +5,10 @@ The goal of this project is to make it very easy to convert .7z files to "hashes
 # Requirements
 
 Software:  
-- Perl must be installed (should work on *nix and windows with perl installed) 
-- Perl module "Compress::Raw::Lzma" (this is needed because .7z header will be compressed whenever there are more files and non-encrypted header is used)
+- if you are using the windows operating system, you could just use the [release version](https://github.com/philsmd/7z2hashcat/releases)
+- if you are using a different operating system or if you prefer to not use the .exe file:
+  - Perl must be installed (should work on *nix and windows with perl installed)
+  - Perl module "Compress::Raw::Lzma" is required (this is needed because the .7z header will be compressed whenever it contains several files and a non-encrypted header is used)
 
 Note: for windows users the [release page](https://github.com/philsmd/7z2hashcat/releases) provides executable files (.exe) which should work AS-IS without the need to install perl or perl modules.  
 Attention: the release version (7z2hashcat.exe) might not be up-to-date with the newest source code all the time, therefore please prefer to use the source code version (instead of the .exe version), especially when you experience some problems and want to report issues.
