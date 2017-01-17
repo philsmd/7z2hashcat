@@ -15,7 +15,7 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # April 2015
 
 # date last updated:
-# 16th January 2017
+# 17th January 2017
 
 # dependencies:
 # Compress::Raw::Lzma
