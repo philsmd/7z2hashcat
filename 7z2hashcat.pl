@@ -2577,7 +2577,7 @@ sub sfx_7z_pe_search
 
   my $num_sections = unpack ("S", $bytes);
 
-  return 00 if ($num_sections < 1);
+  return 0 if ($num_sections < 1);
 
   return 0 if (length (my_read ($fp,  16)) !=  16); # skip rest of FileHeader
   return 0 if (length (my_read ($fp, 224)) != 224); # skip OptionalHeader
