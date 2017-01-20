@@ -1,6 +1,6 @@
 # About
 
-The goal of this project is to make it very easy to convert .7z files to "hashes" which hashcat can crack with mode: -m 11600 = 7-Zip
+The goal of this project is to make it very easy to convert .7z files (and .sfx files which contain .7z files) to "hashes" which hashcat can crack with mode: -m 11600 = 7-Zip
 
 # Requirements
 
@@ -32,7 +32,7 @@ You should be able to just run 7z2hashcat.exe if you are a windows user.
 The usage is very simple: you just specify the path to the 7-Zip file as the first command line argument.   
    
 You can also use multiple files on the command line like this:   
-    ./7z2hashcat.pl file1.7z file2.7z  
+    ./7z2hashcat.pl file1.7z file2.7z file3.sfx 
     ./7z2hashcat.pl \*.7z  
     ./7z2hashcat.pl seven_zip_files/\*  
 
