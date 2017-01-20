@@ -2818,10 +2818,14 @@ sub sfx_get_hash
   {
     my $cur_pos = tell ($fp);
 
-    #if (! exists ($db_positions_analysed{$cur_pos - $full_search_idx}))
-    #{
+    $cur_pos -= $full_search_idx;
+
+    seek ($fp, $cur_pos, 0); # we might not be there yet (depends if $full_search_idx != 0)
+
+    if (! exists ($db_positions_analysed{$cur_pos}))
+    {
       # we can skip the database updates because it's our last try to find the 7z file
-      # $db_positions_analysed{$cur_pos - $full_search_idx} = 1;
+      # $db_positions_analysed{$cur_pos} = 1;
 
       my $archive = read_seven_zip_archive ($fp);
 
@@ -2834,9 +2838,9 @@ sub sfx_get_hash
           return $hash_buf;
         }
       }
-    #}
+    }
 
-    last if (seek ($fp, $cur_pos - $SEVEN_ZIP_MAGIC_LEN + 1, 0) != 1);
+    seek ($fp, $cur_pos + $SEVEN_ZIP_MAGIC_LEN, 0);
 
     ($full_search_found, $full_search_idx) = sfx_7z_full_search ($fp);
   }
