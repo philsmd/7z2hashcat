@@ -2840,7 +2840,7 @@ sub sfx_get_hash
       }
     }
 
-    seek ($fp, $cur_pos + $SEVEN_ZIP_MAGIC_LEN, 0);
+    seek ($fp, $cur_pos, 0); # seek back to position JUST AFTER the previously found signature
 
     ($full_search_found, $full_search_idx) = sfx_7z_full_search ($fp);
   }
