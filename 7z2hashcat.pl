@@ -9,13 +9,13 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # philsmd
 
 # version:
-# 0.9
+# 1.0
 
 # date released:
 # April 2015
 
 # date last updated:
-# 24th January 2017
+# 3rd February 2017
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -2886,7 +2886,42 @@ if (scalar (@ARGV) lt 1)
   exit (1);
 }
 
-foreach my $file_name (@ARGV)
+my @file_list = @ARGV;
+
+sub globbing_on_windows
+{
+  my @file_list = @_;
+
+  my $os = $^O;
+
+  if (($os eq "MSWin32") || ($os eq "Win32"))
+  {
+    my $windows_globbing_module = "File::Glob";
+    my $windows_globbing = "bsd_glob";
+
+    if (eval "require $windows_globbing_module")
+    {
+      no strict 'refs';
+
+      $windows_globbing_module->import ($windows_globbing);
+
+      my @new_file_list = ();
+
+      foreach my $item (@file_list)
+      {
+        push (@new_file_list, $windows_globbing-> ($item));
+      }
+
+      @file_list = @new_file_list;
+    }
+  }
+
+  return @file_list;
+}
+
+@file_list = globbing_on_windows (@file_list);
+
+foreach my $file_name (@file_list)
 {
   if (! -e $file_name)
   {
