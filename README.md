@@ -34,7 +34,8 @@ The usage is very simple: you just specify the path to the 7-Zip file as the fir
 You can also use multiple files on the command line like this:   
     ./7z2hashcat.pl file1.7z file2.7z file3.sfx 
     ./7z2hashcat.pl \*.7z  
-    ./7z2hashcat.pl seven_zip_files/\*  
+    ./7z2hashcat.pl seven_zip_files/\*   
+    ./7z2hashcat.pl splitted_7z_files/huge_file.7z.*   
 
 Note: on windows you can use the release files (.exe) and therefore you shouldn't forget to replace the ".pl" extension with ".exe"  
 Note2: you can also use the perl script on windows directly after installing the [requirements](#requirements) e.g. perl 7z2hashcat.pl ...
