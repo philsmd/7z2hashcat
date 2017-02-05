@@ -446,7 +446,6 @@ sub get_uint32
 
   my $bytes = my_read ($fp, 4);
 
-  return (0, 0) if (! defined ($bytes));
   return (0, 0) if (length ($bytes) != 4);
 
   my $num = unpack ("L", $bytes);
@@ -460,7 +459,6 @@ sub get_uint64
 
   my $bytes = my_read ($fp, 8);
 
-  return (0, 0) if (! defined ($bytes));
   return (0, 0) if (length ($bytes) != 8);
 
   my ($uint1, $uint2) = unpack ("LL<", $bytes);
@@ -2784,14 +2782,12 @@ sub sfx_7z_pe_search
 
   my $bytes = my_read ($fp, 2);
 
-  return 0 if (! defined ($bytes));
   return 0 if (length ($bytes) != 2);
   return 0 if ($bytes ne "MZ"); # 0x5a4d
   return 0 if (length (my_read ($fp, 58)) != 58);
 
   $bytes = my_read ($fp, 4);
 
-  return 0 if (! defined ($bytes));
   return 0 if (length ($bytes) != 4);
 
   my $e_lfanew = unpack ("L", $bytes);
@@ -2802,14 +2798,12 @@ sub sfx_7z_pe_search
 
   $bytes = my_read ($fp, 4); # PE0000 signature after DOS part
 
-  return 0 if (! defined ($bytes));
   return 0 if (length ($bytes) != 4);
   return 0 if ($bytes ne "PE\x00\x00");
   return 0 if (length (my_read ($fp, 2)) != 2); # skip FileHeader.Machine
 
   $bytes = my_read ($fp, 2);
 
-  return 0 if (! defined ($bytes));
   return 0 if (length ($bytes) != 2);
 
   my $num_sections = unpack ("S", $bytes);
@@ -2833,7 +2827,6 @@ sub sfx_7z_pe_search
 
     $bytes = my_read ($fp, 4);
 
-    return 0 if (! defined ($bytes));
     return 0 if (length ($bytes) != 4);
 
     my $size_of_raw_data = unpack ("L", $bytes);
@@ -2842,7 +2835,6 @@ sub sfx_7z_pe_search
 
     $bytes = my_read ($fp, 4);
 
-    return 0 if (! defined ($bytes));
     return 0 if (length ($bytes) != 4);
 
     my $pointer_to_raw_data = unpack ("L", $bytes);
@@ -2868,7 +2860,6 @@ sub sfx_7z_pe_search
 
   $bytes = my_read ($fp, $SEVEN_ZIP_MAGIC_LEN);
 
-  return 0 if (! defined ($bytes));
   return 0 if (length ($bytes) != $SEVEN_ZIP_MAGIC_LEN);
 
   if ($bytes eq $SEVEN_ZIP_MAGIC)
@@ -2931,7 +2922,6 @@ sub sfx_7z_full_search
   {
     my $bytes = my_read ($fp, $SEVEN_ZIP_MAGIC_LEN);
 
-    last if (! defined ($bytes));
     last if (length  ($bytes) == 0);
 
     $prev_idx_into_magic = $idx_into_magic;
