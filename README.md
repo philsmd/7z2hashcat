@@ -103,6 +103,10 @@ The following table should sum it up pretty nicely:
 | 7                   | DEFLATE      |
 | 128                 | truncated    |
 
+# Sensitive data warning
+
+WARNING: as you can see from the hash format explanation above the hashes themself could sometimes contain sensitive data (in some cases the data is both encrypted and compressed). You should be careful when it comes to sharing the output of 7z2hashcat because people that understand the format might be easily extract sensitive data out of the decrypted (and decompressed) data.
+
 # Hacking / Missing features
 
 * More features
@@ -114,6 +118,7 @@ The following table should sum it up pretty nicely:
 * and,and,and
 
 # Credits and Contributors 
+
 Credits go to:  
   
 * philsmd, hashcat project
