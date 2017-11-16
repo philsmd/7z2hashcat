@@ -9,13 +9,13 @@ use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 # philsmd
 
 # version:
-# 1.1
+# 1.2
 
 # date released:
 # April 2015
 
 # date last updated:
-# 17th May 2017
+# 16th Nov 2017
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -1313,7 +1313,7 @@ sub extract_hash_from_archive
     $type_of_data = $type_of_compression;
   }
 
-  $hash_buf = sprintf ("%s%i\$%i\$%i\$%s\$%i\$%s\$%i\$%i\$%i\$%s",
+  $hash_buf = sprintf ("%s%u\$%u\$%u\$%s\$%u\$%s\$%u\$%u\$%u\$%s",
     $SEVEN_ZIP_HASH_SIGNATURE,
     $type_of_data,
     $number_cycles_power,
@@ -1332,7 +1332,7 @@ sub extract_hash_from_archive
 
   my $crc_len = $substreams_info->{'unpack_sizes'}[0]; # we always stick to the first file here
 
-  $hash_buf .= sprintf ("\$%i\$%s",
+  $hash_buf .= sprintf ("\$%u\$%s",
     $crc_len,
     $compression_attributes
   );
