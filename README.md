@@ -61,7 +61,7 @@ This is an overview of the output:
 | $ | [length of iv]             | yes              | the length of the initialization vector (values from 0 to 16)                                   |
 | $ | [iv]                       | yes              | the initialization vector in hexadecimal form                                                   |
 | $ | [CRC32]                    | yes              | the actual "hash" aka the CRC checksum in decimal form                                          |
-| $ | [length of encrypted data] | yes              | the length of the encrypted data (see [encrypted data]                                          |
+| $ | [length of encrypted data] | yes              | the length of the encrypted data (see [encrypted data])                                          |
 | $ | [length of decrypted data] | yes              | the length of the output of the AES decryption of [encrypted data]                              |
 | $ | [encrypted data]           | yes              | the encrypted data itself (this field in some cases could be truncated, see below)              |
 | $ | [length of data for CRC32] | no               | optional field indicating the length of the first "file" in case decompression needs to be used |
@@ -69,7 +69,7 @@ This is an overview of the output:
 
 The **data type indicator** is a special field and needs some further explanation:  
   
-This field is the first field after the hash signature (i.e. after "$7z$).  
+This field is the first field after the hash signature (i.e. after "$7z$").  
 Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT (see 7z2hashcat.pl) and an AES padding attack is possible, the value will be 128 and [data] will be truncated (a warning message will be shown in case the data limit was reached but padding attack is not applicable).  
   
 If no truncation is used/possible:  
