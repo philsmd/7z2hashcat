@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.3
+# 1.4
 
 # date released:
 # April 2015
 
 # date last updated:
-# 28th Nov 2018
+# 4th May 2020
 
 # dependencies:
 # Compress::Raw::Lzma
