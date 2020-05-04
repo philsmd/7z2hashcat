@@ -76,13 +76,23 @@ Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT 
 If no truncation is used/possible:  
 - the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum  
 - all values different from 128, but greater than 0 indicate that the data must be decompressed as follows:  
-  - 1 means that the data must be decompressed using the LZMA1 decompressor  
-  - 2 means that the data must be decompressed using the LZMA2 decompressor  
-  - 3 means that the data must be decompressed using the PPMD decompressor  
-  - 4 means that the data must be decompressed using the BCJ decompressor  
-  - 5 means that the data must be decompressed using the BCJ2 decompressor  
-  - 6 means that the data must be decompressed using the BZIP2 decompressor  
-  - 7 means that the data must be decompressed using the DEFLATE decompressor  
+   - Lower nibble (4 bits, type & 0xf):
+     - 1 means that the data must be decompressed using the LZMA1 decompressor
+     - 2 means that the data must be decompressed using the LZMA2 decompressor
+     - 3 means that the data must be decompressed using the PPMD decompressor
+     - 4 reserved (future use)
+     - 5 reserved (future use)
+     - 6 means that the data must be decompressed using the BZIP2 decompressor
+     - 7 means that the data must be decompressed using the DEFLATE decompressor
+     - 8-15 reserved (future use)
+   - Upper nibble ((type >> 4) & 0x7):
+     - 1 means that the data must be post-processed using BCJ (x86)
+     - 2 means that the data must be post-processed using BCJ2 (four data streams needed)
+     - 3 means that the data must be post-processed using PPC (big-endian)
+     - 4 means that the data must be post-processed using IA64
+     - 5 means that the data must be post-processed using ARM (little-endian)
+     - 6 means that the data must be post-processed using ARMT (little-endian)
+     - 7 means that the data must be post-processed using SPARC
 
 Truncated data can only be verified using the padding attack and therefore combinations between truncation and a compressor are not meaningful/allowed.  
   
