@@ -81,7 +81,7 @@ use File::Basename;
 # - the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum
 # - all values different from 128, but greater than 0, indicate that the data must be decompressed as follows:
 #
-# LOWER NIBBLE (type & 0xf)
+# LOWER NIBBLE (4 bits, type & 0xf)
 #   - 1 means that the data must be decompressed using the LZMA1 decompressor
 #   - 2 means that the data must be decompressed using the LZMA2 decompressor
 #   - 3 means that the data must be decompressed using the PPMD decompressor
@@ -91,7 +91,7 @@ use File::Basename;
 #   - 7 means that the data must be decompressed using the DEFLATE decompressor
 #   - 8 .. 15 reserved (future use)
 #
-# UPPER NIBBLE ((type >> 4) & 0x07)
+# UPPER NIBBLE ((type >> 4) & 0x7)
 #   - 1 means that the data must be post-processed using BCJ (x86)
 #   - 2 means that the data must be post-processed using BCJ2 (four data streams needed)
 #   - 3 means that the data must be post-processed using PPC (big-endian)
