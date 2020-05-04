@@ -1,6 +1,6 @@
 # About
 
-The goal of this project is to make it very easy to convert .7z files (and .sfx files which contain .7z files) to "hashes" which hashcat can crack with mode: -m 11600 = 7-Zip
+The goal of this project is to make it very easy to convert password-protected .7z files (and .sfx files which contain .7z files) to "hashes" which hashcat can crack with mode: -m 11600 = 7-Zip
 
 # Requirements
 
@@ -106,7 +106,7 @@ The following table should sum it up pretty nicely:
 
 # Sensitive data warning
 
-WARNING: as you can see from the hash format explanation above the hashes themself could sometimes contain sensitive data (in some cases the data is both encrypted and compressed). You should be careful when it comes to sharing the output of 7z2hashcat because people that understand the format might be easily extract sensitive data out of the decrypted (and decompressed) data.
+WARNING: as you can see from the hash format explanation above the hashes themself could sometimes contain sensitive data (in some cases the data is both encrypted and compressed). You should be careful when it comes to sharing the output of 7z2hashcat because people that understand the format might be able to extract sensitive data out of the decrypted (and decompressed) data.
 
 # Hacking / Missing features
 
