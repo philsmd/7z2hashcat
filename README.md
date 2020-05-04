@@ -100,7 +100,7 @@ Therefore, whenever the value is 128 or 0, neither coder attributes nor the leng
   
 On the other hand, for all values above or equal 1 and smaller than 128, both coder attributes and the length of the decompressed data for CRC32 check is within the output.  
     
-The following table should sum it up pretty nicely:  
+The following table should sum up the most common data type indicator values pretty nicely:  
 
 | data type indicator | Explanation  |
 | --------------------|--------------|
@@ -108,8 +108,6 @@ The following table should sum it up pretty nicely:
 | 1                   | LZMA         |
 | 2                   | LZMA2        |
 | 3                   | PPMD         |
-| 4                   | BCJ          |
-| 5                   | BCJ2         |
 | 6                   | BZIP2        |
 | 7                   | DEFLATE      |
 | 128                 | truncated    |
