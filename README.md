@@ -21,11 +21,11 @@ Note: this paragraph is only intended for users that do not use the release vers
 You should be able to just run 7z2hashcat.exe if you are a windows user.
 
 * Clone this repository:  
-    git clone https://github.com/philsmd/7z2hashcat.git  
+    ```git clone https://github.com/philsmd/7z2hashcat.git```
 * Enter the repository root folder:  
-    cd 7z2hashcat
+    ```cd 7z2hashcat```
 * Run it:  
-    perl 7z2hashcat.pl file.7z
+    ```perl 7z2hashcat.pl file.7z```
 * Copy output to a file (or redirect output to a file (>) directly) and run it with hashcat using mode -m 11600 = 7-Zip
 
 # Command line parameters 
@@ -33,10 +33,13 @@ You should be able to just run 7z2hashcat.exe if you are a windows user.
 The usage is very simple: you just specify the path to the 7-Zip file as the first command line argument.   
    
 You can also use multiple files on the command line like this:   
-    perl 7z2hashcat.pl file1.7z file2.7z file3.sfx 
-    perl 7z2hashcat.pl \*.7z  
-    perl 7z2hashcat.pl seven_zip_files/\*   
-    perl 7z2hashcat.pl splitted_7z_files/huge_file.7z.*   
+```
+perl 7z2hashcat.pl file1.7z file2.7z file3.sfx
+perl 7z2hashcat.pl \*.7z```
+perl 7z2hashcat.pl seven_zip_files/\*```  
+perl 7z2hashcat.pl splitted_7z_files/huge_file.7z.*
+```
+  
 
 Note: on windows you can use the release files (.exe) and therefore you shouldn't forget to replace the ".pl" extension with ".exe"  
 Note2: you can also use the perl script on windows directly after installing the [requirements](#requirements) e.g. perl 7z2hashcat.pl ...
