@@ -36,7 +36,7 @@ You can also use multiple files on the command line like this:
 ```
 perl 7z2hashcat.pl file1.7z file2.7z file3.sfx
 perl 7z2hashcat.pl *.7z
-perl 7z2hashcat.pl seven_zip_files/\*
+perl 7z2hashcat.pl seven_zip_files/*
 perl 7z2hashcat.pl splitted_7z_files/huge_file.7z.*
 ```
   
