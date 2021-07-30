@@ -128,7 +128,7 @@ my $SHORTEN_HASH_EXTRA_PERCENT = 5;     # the compressed stream could be slightl
 my $DISPLAY_SENSITIVE_DATA_WARNING = 1; # 0 means skip or use --skip-sensitive-data-warning
 
 my $PASSWORD_RECOVERY_TOOL_NAME = "hashcat";
-my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 655056;              # hexadecimal output value. This value should always be >= 64
+my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 16 * 1024 * 1024;    # hexadecimal output value. This value should always be >= 64
 my $PASSWORD_RECOVERY_TOOL_SUPPORT_PADDING_ATTACK  = 0;      # does the cracker support the AES-CBC padding attack (0 means no, 1 means yes)
 my @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS = (1, 2); # within this list we only need values ranging from 1 to 7
                                                              # i.e. SEVEN_ZIP_LZMA1_COMPRESSED to SEVEN_ZIP_DEFLATE_COMPRESSED
