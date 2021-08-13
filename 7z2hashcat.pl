@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.4
+# 1.41
 
 # date released:
 # April 2015
 
 # date last updated:
-# 4th May 2020
+# 13th Aug 2021
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -1430,6 +1430,8 @@ sub extract_hash_from_archive
 
             for (my $coders_idx = 0; $coders_idx < $number_coders; $coders_idx++)
             {
+              next unless defined @$coders[$coders_idx];
+
               my $codec_id = @$coders[$coders_idx]->{'codec_id'};
 
               if ($codec_id eq $SEVEN_ZIP_AES)
