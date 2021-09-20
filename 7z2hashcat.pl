@@ -17,10 +17,11 @@ use File::Basename;
 # April 2015
 
 # date last updated:
-# 13th Aug 2021
+# 20th Sep 2021
 
 # dependencies:
 # Compress::Raw::Lzma
+# File::Basename
 
 # supported file types:
 # - is able to identify and parse .7z files
