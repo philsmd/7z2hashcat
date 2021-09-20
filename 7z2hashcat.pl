@@ -11,7 +11,7 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.41
+# 1.5
 
 # date released:
 # April 2015
@@ -1530,7 +1530,7 @@ sub extract_hash_from_archive
     return "";
   }
 
-  $hash_buf = basename($file_path) . ":" . $hash_buf if $PASSWORD_RECOVERY_TOOL_NAME eq "john";
+  $hash_buf = basename ($file_path) . ":" . $hash_buf if $PASSWORD_RECOVERY_TOOL_NAME eq "john";
 
   $hash_buf .= sprintf ("%s%u\$%u\$%u\$%s\$%u\$%s\$%u\$%u\$%u\$%s",
     $SEVEN_ZIP_HASH_SIGNATURE,
