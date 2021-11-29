@@ -9,7 +9,10 @@ Software:
 - if you are using a different operating system or if you prefer to not use the .exe file:
   - Perl must be installed (should work on *nix and windows with perl installed)
   - Perl module "Compress::Raw::Lzma" is required (this is needed because the .7z header will be compressed whenever it contains several files and a non-encrypted header is used)
-    - example on ubuntu 18.04: `apt install libcompress-raw-lzma-perl` 
+    - example on how to install it on ubuntu:  
+    `sudo apt install libcompress-raw-lzma-perl`  
+    or  
+    `sudo cpan Compress::Raw::Lzma`
   - Perl module "File::Basename" is required for the John The Ripper output format (with file names in the hash)
 
 Note: for windows users the [release page](https://github.com/philsmd/7z2hashcat/releases) provides executable files (.exe) which should work AS-IS without the need to install perl or perl modules.  
