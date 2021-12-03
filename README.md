@@ -69,11 +69,12 @@ This is an overview of the output:
 | $ | [length of iv]             | yes              | the length of the initialization vector (values from 0 to 16)                                   |
 | $ | [iv]                       | yes              | the initialization vector in hexadecimal form                                                   |
 | $ | [CRC32]                    | yes              | the actual "hash" aka the CRC checksum in decimal form                                          |
-| $ | [length of encrypted data] | yes              | the length of the encrypted data (see [encrypted data])                                          |
+| $ | [length of encrypted data] | yes              | the length of the encrypted data (see [encrypted data])                                         |
 | $ | [length of decrypted data] | yes              | the length of the output of the AES decryption of [encrypted data]                              |
 | $ | [encrypted data]           | yes              | the encrypted data itself (this field in some cases could be truncated, see below)              |
 | $ | [length of data for CRC32] | no               | optional field indicating the length of the first "file" in case decompression needs to be used |
 | $ | [coder attributes]         | no               | optional field indicating the attributes for the decompressor                                   |
+| $ | [preprocessor attributes]  | no               | optional field indicating the attributes for the preprocessor                                   |
 
 The **data type indicator** is a special field and needs some further explanation:  
   
@@ -92,7 +93,7 @@ If no truncation is used/possible:
      - 6 means that the data must be decompressed using the BZIP2 decompressor
      - 7 means that the data must be decompressed using the DEFLATE decompressor
      - 8-15 reserved (future use)
-   - Upper nibble ((type >> 4) & 0x7):
+   - Upper nibble (4 bits, (type >> 4) & 0xf):
      - 1 means that the data must be post-processed using BCJ (x86)
      - 2 means that the data must be post-processed using BCJ2 (four data streams needed)
      - 3 means that the data must be post-processed using PPC (big-endian)
@@ -100,6 +101,8 @@ If no truncation is used/possible:
      - 5 means that the data must be post-processed using ARM (little-endian)
      - 6 means that the data must be post-processed using ARMT (little-endian)
      - 7 means that the data must be post-processed using SPARC
+     - 8 means that the data must be post-processed using DELTA
+     - 9-15 reserved (future use)
 
 Truncated data can only be verified using the padding attack and therefore combinations between truncation and a compressor are not meaningful/allowed.  
   
