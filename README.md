@@ -32,11 +32,11 @@ You should be able to just run 7z2hashcat.exe if you are a windows user.
     ```perl 7z2hashcat.pl file.7z```
 * Copy output to a file (or redirect output to a file (>) directly) and run it with hashcat using mode -m 11600 = 7-Zip
 
-# Command line parameters 
+# Command line parameters
 
-The usage is very simple: you just specify the path to the 7-Zip file as the first command line argument.   
-   
-You can also use multiple files on the command line like this:   
+The usage is very simple: you just specify the path to the 7-Zip file as the first command line argument.  
+  
+You can also use multiple files on the command line like this:  
 ```
 perl 7z2hashcat.pl file1.7z file2.7z file3.sfx
 perl 7z2hashcat.pl *.7z
@@ -48,9 +48,9 @@ perl 7z2hashcat.pl splitted_7z_files/huge_file.7z.*
 Note: on windows you can use the release files (.exe) and therefore you shouldn't forget to replace the ".pl" extension with ".exe"  
 Note2: you can also use the perl script on windows directly after installing the [requirements](#requirements) e.g. ```perl 7z2hashcat.pl ...```
 
-# Explanation of the hash format 
+# Explanation of the hash format
 
-The following paragraph explains some details about the output of 7z2hashcat.   
+The following paragraph explains some details about the output of 7z2hashcat.  
 You do not need to understand or know all this information for just cracking hashes. Instead, this is just some documentation about the different fields within the output.  
   
 7z2hashcat outputs one hash per line. Warning and error messages are outputted to STDERR and therefore shouldn't interfere with the outputted "hashes".  
@@ -73,8 +73,8 @@ This is an overview of the output:
 | $ | [length of decrypted data] | yes              | the length of the output of the AES decryption of [encrypted data]                              |
 | $ | [encrypted data]           | yes              | the encrypted data itself (this field in some cases could be truncated, see below)              |
 | $ | [length of data for CRC32] | no               | optional field indicating the length of the first "file" in case decompression needs to be used |
-| $ | [coder attributes]         | no               | optional field indicating the attributes for the decompressor                                   |
-| $ | [preprocessor attributes]  | no               | optional field indicating the attributes for the preprocessor                                   |
+| $ | [coder attributes]         | no               | optional field indicating the comma-separated list of attributes for the decompressor(s)        |
+| $ | [preprocessor attributes]  | no               | optional field indicating the comma-separated list of attributes for the preprocessor           |
 
 The **data type indicator** is a special field and needs some further explanation:  
   
@@ -82,7 +82,7 @@ This field is the first field after the hash signature (i.e. after "$7z$").
 Whenever the data is longer than the value of PASSWORD_RECOVERY_TOOL_DATA_LIMIT (see 7z2hashcat.pl) and an AES padding attack is possible, the value will be 128 and [data] will be truncated (a warning message will be shown in case the data limit was reached but padding attack is not applicable).  
   
 If no truncation is used/possible:  
-- the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum  
+- the value will be 0 if the data doesn't need to be decompressed to check the CRC32 checksum
 - all values different from 128, but greater than 0 indicate that the data must be decompressed as follows:  
    - Lower nibble (4 bits, type & 0xf):
      - 1 means that the data must be decompressed using the LZMA1 decompressor
@@ -109,7 +109,7 @@ Truncated data can only be verified using the padding attack and therefore combi
 Therefore, whenever the value is 128 or 0, neither coder attributes nor the length of the data for the CRC32 check is within the output.  
   
 On the other hand, for all values above or equal 1 and smaller than 128, both coder attributes and the length of the decompressed data for CRC32 check is within the output.  
-    
+  
 The following table should sum up the most common data type indicator values pretty nicely:  
 
 | data type indicator | Explanation  |
@@ -122,6 +122,21 @@ The following table should sum up the most common data type indicator values pre
 | 7                   | DEFLATE      |
 | 128                 | truncated    |
 
+Whenever the data needs to be either (pre)processed by multiple (2+) filters or whenever the data needs to be decompressed by multiple (2+) decompression algorithms, the attribute list (the fields `preprocessor attributes` and `coder attributes` accordingly) will be a comma-separated list of fields with type, order/position and attribute indicators.  
+  
+The rules for this **Multiple Compressor(s)/Preprocessor(s)** list are as follows:  
+- all (additional) methods/coders need to be specified in the output hash format (the fields `coder attributes` and `preprocessor attributes` accordingly), even if they have no attributes
+- the format is a comma-separated list of type and order indicator (for both fields: compressor and preprocessor attributes), followed by a colon (:), followed by the attribute itself
+- the **first attribute**/item/codec for both fields (compressor and preprocessor attributes) needs no type and order indicator, only attributes
+- the type and position/order of the first decompressor/filter are implied (it's always the first decompressor/filter and the type is in the `data type indicator` field)
+- this also means that the field `data type indicator` (see format above) only indicates the **first** decompressor (if used) and (also, if used) the first preprocessing filter (this is also due to compatibility reasons with older formats)
+- for the additional (2+) decompressors/filters, the first number after the comma is the type and order indicator, after which follows a colon (:) and the attributes themself (could be empty/no attribute value for some codecs)
+- special case: the `coder attributes` field could start with a comma (and has also a type and order indicator) in the unlikely case where during archive generation a filter was applied after the final compression of the data. Otherwise it's always the case that the decompressor needs to be applied first
+  
+Multiple Compressor(s)/Preprocessor(s) type and order indicator (it is one combined field/number):  
+- upper nibble (4 bits, indicator >> 4) indicates the compressor/preprocessor **method**/type/codec (LZMA2, Delta, BCJ etc)
+- lower nibble (4 bits, indicator & 0xf) indicates the order/position (the step at which the (de)compressor/(pre)processor needs to be applied). The values are incrementing, the counter starts with 1
+
 # Sensitive data warning
 
 WARNING: as you can see from the hash format explanation above the hashes themself could sometimes contain sensitive data (in some cases the data is both encrypted and compressed). You should be careful when it comes to sharing the output of 7z2hashcat because people that understand the format might be able to extract sensitive data out of the decrypted (and decompressed) data.
@@ -132,11 +147,11 @@ WARNING: as you can see from the hash format explanation above the hashes themse
 * CLEANUP the code, use more coding standards, make it easier readable, everything is welcome (submit patches!)
 * testing/add support for "external files"
 * keep it up-to-date with 7zip source code and/or p7zip
-* improvements and all bug fixes are very welcome 
+* improvements and all bug fixes are very welcome
 * solve and remove the TODOs (if any exist)
 * and,and,and
 
-# Credits and Contributors 
+# Credits and Contributors
 
 Credits go to:  
   
