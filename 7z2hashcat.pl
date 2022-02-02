@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.7
+# 1.8
 
 # date released:
 # April 2015
 
 # date last updated:
-# 21st Dec 2021
+# 2nd Feb 2022
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -116,11 +116,11 @@ use File::Basename;
 #
 # The rules for this Multiple Compressor(s)/Preprocessor(s) list are as follows:
 #   - all (additional) methods/coders need to be specified in the output hash format (the fields "coder attributes" and "preprocessor attributes" accordingly), even if they have no attributes
-#   - the format is a comma-separated list of type and order indicator (for both fields: compressor and preprocessor attributes), followed by a colon (:), followed by the attribute itself
+#   - the format is a comma-separated list of type and order indicator (for both fields: compressor and preprocessor attributes), followed by an underscore (_), followed by the attribute itself
 #   - the first attribute/item/codec for both fields (compressor and preprocessor attributes) needs no type and order indicator, only attributes
 #   - the type and position/order of the first decompressor/filter are implied (it's always the first decompressor/filter and the type is in the "data type indicator" field)
 #   - this also means that the field "data type indicator" (see format above) only indicates the first decompressor (if used) and (also, if used) the first preprocessing filter (this is also due to compatibility reasons with older formats)
-#   - for the additional (2+) decompressors/filters, the first number after the comma is the type and order indicator, after which follows a colon (:) and the attributes themself (could be empty/no attribute value for some codecs)
+#   - for the additional (2+) decompressors/filters, the first number after the comma is the type and order indicator, after which follows an underscore (_) and the attributes themself (could be empty/no attribute value for some codecs)
 #   - special case: the "coder attributes" field could start with a comma (and has also a type and order indicator) in the unlikely case where during archive generation a filter was applied after the final compression of the data. Otherwise it's always the case that the decompressor needs to be applied first
 #
 # Multiple Compressor(s)/Preprocessor(s) type and order indicator (it is one combined field/number):
@@ -1072,12 +1072,12 @@ sub check_attributes
         }
         else # special case: preprocessor after compressing (unlikely)
         {
-          $compression_attributes = "," . (($cur_type << 4) + $codec_count) . ":" . $attr;
+          $compression_attributes = "," . (($cur_type << 4) + $codec_count) . "_" . $attr;
         }
       }
       else
       {
-        $compression_attributes .= "," . (($cur_type << 4) + $codec_count) . ":" . $attr;
+        $compression_attributes .= "," . (($cur_type << 4) + $codec_count) . "_" . $attr;
       }
 
       # cosmetic (warning message):
@@ -1106,7 +1106,7 @@ sub check_attributes
       }
       else
       {
-        $preprocessor_attributes .= "," . (($cur_type << 4) + $codec_count) . ":" . $attr;
+        $preprocessor_attributes .= "," . (($cur_type << 4) + $codec_count) . "_" . $attr;
       }
 
       # cosmetic (warning message):
