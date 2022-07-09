@@ -934,7 +934,7 @@ sub fill_additional_attribute_list
   }
   elsif ($codec_id eq $SEVEN_ZIP_COPY)
   {
-    return; # don't add it to our coder_attributes list, it's a NO-OP
+    return 0; # don't add it to our coder_attributes list, it's a NO-OP
   }
   elsif ($codec_id eq $SEVEN_ZIP_BCJ)
   {
