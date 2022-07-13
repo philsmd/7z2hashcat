@@ -142,6 +142,10 @@ Multiple Compressor(s)/Preprocessor(s) type and order indicator (it is one combi
 
 WARNING: as you can see from the hash format explanation above the hashes themself could sometimes contain sensitive data (in some cases the data is both encrypted and compressed). You should be careful when it comes to sharing the output of 7z2hashcat because people that understand the format might be able to extract sensitive data out of the decrypted (and decompressed) data.
 
+# hc_to_7z
+
+For debugging / troubleshooting purposes, we have also developed a tool that tries to reverse the work of `7z2hascat` to try to generate a valid `7-Zip` (`*.7z`) archive file from hash lines (output of `7z2hashcat`). This is a proof of concept that you can find here: https://github.com/philsmd/hc_to_7z
+
 # Hacking / Missing features
 
 * More features
