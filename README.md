@@ -101,8 +101,9 @@ If no truncation is used/possible:
      - 5 means that the data must be post-processed using ARM (little-endian)
      - 6 means that the data must be post-processed using ARMT (little-endian)
      - 7 means that the data must be post-processed using SPARC
-     - 8 means that the data must be post-processed using DELTA
-     - 9-15 reserved (future use)
+     - 8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
+     - 9 means that the data must be post-processed using DELTA
+     - 10-15 reserved (future use)
 
 Truncated data can only be verified using the padding attack and therefore combinations between truncation and a compressor are not meaningful/allowed.  
   

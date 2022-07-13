@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.8
+# 1.9
 
 # date released:
 # April 2015
 
 # date last updated:
-# 2nd Feb 2022
+# July 13 2022
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -104,8 +104,9 @@ use File::Basename;
 #   - 5 means that the data must be post-processed using ARM (little-endian)
 #   - 6 means that the data must be post-processed using ARMT (little-endian)
 #   - 7 means that the data must be post-processed using SPARC
-#   - 8 means that the data must be post-processed using DELTA
-#   - 9 .. 15 reserved (future use)
+#   - 8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
+#   - 9 means that the data must be post-processed using DELTA
+#   - 10 .. 15 reserved (future use)
 
 # Truncated data can only be verified using the padding attack and therefore combinations between truncation + a compressor are not allowed.
 # Therefore, whenever the value is 128 or 0, neither coder attributes nor the length of the data for the CRC32 check is within the output.
@@ -241,13 +242,14 @@ my $SEVEN_ZIP_IA64_PREPROCESSED  =   4;
 my $SEVEN_ZIP_ARM_PREPROCESSED   =   5;
 my $SEVEN_ZIP_ARMT_PREPROCESSED  =   6;
 my $SEVEN_ZIP_SPARC_PREPROCESSED =   7;
-my $SEVEN_ZIP_DELTA_PREPROCESSED =   8;
+                                 #   8 conflicts with SEVEN_ZIP_TRUNCATED (128 == 0x80 == 8 << 4)
+my $SEVEN_ZIP_DELTA_PREPROCESSED =   9;
 
 my $SEVEN_ZIP_TRUNCATED          = 128; # (0x80 or 0b10000000)
 
 my %SEVEN_ZIP_COMPRESSOR_NAMES   = (1 => "LZMA1", 2 => "LZMA2", 3 => "PPMD", 6 => "BZIP2", 7 => "DEFLATE",
                                     (1 << 4) => "BCJ", (2 << 4) => "BCJ2", (3 << 4) => "PPC", (4 << 4) => "IA64",
-                                    (5 << 4) => "ARM", (6 << 4) => "ARMT", (7 << 4) => "SPARC", (8 << 4) => "DELTA");
+                                    (5 << 4) => "ARM", (6 << 4) => "ARMT", (7 << 4) => "SPARC", (9 << 4) => "DELTA");
 
 #
 # Helper functions
