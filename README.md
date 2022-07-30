@@ -22,7 +22,7 @@ Attention: the release version (7z2hashcat.exe) might not be up-to-date with the
 # Installation and first steps
 
 Note: this paragraph is only intended for users that do not use the release version for windows.
-You should be able to just run 7z2hashcat.exe if you are a windows user.
+You should be able to just run the `7z2hashcat` executable (`.exe`) within `cmd` (see note below) if you are a windows user.
 
 * Clone this repository:  
     ```git clone https://github.com/philsmd/7z2hashcat.git```
@@ -31,6 +31,8 @@ You should be able to just run 7z2hashcat.exe if you are a windows user.
 * Run it:  
     ```perl 7z2hashcat.pl file.7z```
 * Copy output to a file (or redirect output to a file (>) directly) and run it with hashcat using mode -m 11600 = 7-Zip
+
+Note: independent from how you launch `7z2hashcat`, i.e. either the perl script directly or the windows executable, you always need to launch your shell/`cmd`/`konsole`/`xterm` application first and only afterwards start `7z2hashcat`, otherwise, if you for instance just double-click the script/executable, it might appear to you that the program just opens and closes immediately.
 
 # Command line parameters
 
