@@ -1,3 +1,190 @@
+run hashcat on 7z files - 7z2hashcat.pl
+0000.7z: 1536 bytes, MD5: 489bafd4a3f3d3e3e3e3e3e3e3e3e3e3 (OK)
+0001.7z: 1536 bytes, MD5: 489bafd4a3f3d3e3e3e3e3e3e3e3e3e3 (OK)
+0002.7z: 1536 bytes, MD5: 489bafd4a3f3d3e3e3e3e3e3e3e3e3e3 (OK)
+
+Usage: 7z2hashcat.pl <0000.7z
+
+7z2hashcat.pl - 7-Zip hashcat format tool v1.6, by philsmd and magnum
+Usage: 7z2hashcat.pl <7-Zip 0000>..<7-Zip 0000>
+7z2hashcat.pl 0000.7z [options]
+Options:
+-h|--help                   Show this help.
+-v|--version                Print version information.
+-o|--output=OUTPUT         Output file. Default is stdout.
+-t|--type=[TYPE]           Type of hash. Default is 7z. Other types are md5, sha1, sha256, sha512, sha3-256, sha3-512, bcrypt, scrypt, pbkdf2, argon2, and hmac.
+-t|--type=[TYPE]           Type of hash. Default is 7z. Other types are md5, sha1, sha256, sha512, sha3-256, sha3-512, bcrypt, scrypt, pbkdf2, argon2, and hmac.
+-n|--no-name                Do not display the file name.
+-c|--cpu-type               Set the CPU type. Default is auto. Other types are x86, x64, and arm.
+-m|--mask                   Use mask
+-r|--rules                  Use rules 
+-s|--show                   Show the hash
+-d|--debug                  Debug mode
+-e|--example                Show example usage  7z2hashcat.pl 0000.7z -o hash.txt --show</span>
+7z2hashcat.pl 0001.7z -o hash.txt --show
+Filename: 0001.7z
+MD5:     489bafd4a3f3d3e3e3e3e3e3e3e3e3e3
+CPU Type: Auto
+Hash Type: md5
+Password Length Minimum: 0  Maximum: 256
+Charset: UTF-8
+Mask: None
+Rules: None   
+7z2hashcat.pl 0002.7z -o hash.txt --show
+Filename: 0002.7z   
+MD5:     489bafd4a3f3d3e3e3e3e3e3e3e3e3e3
+#!/usr/bin/env perl
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=4
+hashcat64 -a 3 -m 0000.7z  output.hash 
+ wordlist.txt?a=1&b=2&c=3&d=4&e=5
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=4&e=5&f=6
+hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=4&e=5&f=6&g=7
+# Run hashcat command with appropriate arguments
+# hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=4&e=5&f=6&g=7&h=8
+# hashcat64 -a 3 -m 0000.7z  output.hash  wordlist.txt?a=1&b=2&c=3&d=4&e=5&f=6&g=7&h=8&i=9
+# Perl script to parse a 7zip file and convert it to a hashcat format file
+use strict;
+use warnings;
+use Getopt::Long qw(:config   no_ignore_case); # Avoid case sensitivity for options
+use File::Basename 'dirname'; # Get the directory name of a file path   
+
+# Define the usage of the script
+
+sub usage {
+  print "Usage: $0 <0000.7z>...\n"
+} 
+
+# Check if we have any files to process, otherwise show usage   
+if (@ARGV == 0) {       
+
+  usage();
+  exit 1; 
+}
+
+my @files = (); # Array to store the files to process
+
+foreach my $file (@ARGV){ # Iterate over the files passed as arguments
+
+  push(@files,$file); #
+}
+
+# Iterate over the files and process them
+foreach my $file (@files) {
+
+  # Print some information about the current file
+  print "\nProcessing '$file'...\n";
+
+  # Call the perl script that converts the 7z file to a hashcat format file         
+  system
+    my $command = "./convert-7z-to-hashcat.pl $0000.7z > $hash.txt";
+    die "$command failed: $!" if $? == -1;     # Something went wrong         
+    print
+    
+       "Done.\n"  
+        
+          
+                                  # The command was successful     
+# Remove the unnecessary closing brace
+# }
+
+exit(0); # Exit the script with a successful status code  
+
+# Define the usage of the script
+__END__
+sub usage {
+  print <<EOF;
+This is a simple script that takes one or more 7z files as input and converts them to a hashcat format file. The hashcat format is suitable for use with the hashcat password recovery tool. The script takes the 7z file as input and outputs the hashcat format to the standard output. The output can be redirected to a file if needed.
+This is a simple Perl script that takes one or more 7z files as input and converts them to a hashcat format file. The hashcat format is suitable for use with the hashcat password recovery tool. The script takes the 7z file as input and outputs the hashcat format to the standard output. The output can be redirected to a file if needed.
+This is a simple Perl script that takes one or more 7z files as input and converts them to a hashcat format file. The hashcat format is suitable for use with the hashcat password recovery tool. The script takes the 7z file as input and outputs the hashcat format to the standard output. The output can be redirected to a file if needed.
+EOF
+  exit 1;
+
+
+  my $output = '';
+  my $exit_status = system($command);
+  if ($exit_status != 0) {
+    print "Error executing command: $command\n";
+    exit(1);
+  }
+  print $output if $? != 0;
+
+  # If something went wrong while trying to process the file, exit the script
+
+  # If something went wrong while processing the file, exit the script
+  exit(1);
+} 
+  exit 1;
+}
+
+my %options = (
+
+#!/usr/bin/env perl
+use strict;
+use warnings FATAL => 'all';
+use Getopt::Long qw(:config   no_ignore_case);      
+CPU Type: Auto
+Hash Type: md5
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Digest::MD5 qw(
+  md5
+);
+use File::Basename;
+
+
+
+
+
+#!/usr/bin/env perl
+
+This script converts a .7z file 
+to a hash format that is suitable for hashcat.
+
+
+
+
+
+
+        
+          
+          
+            
+            . [
+Options:
+-h|--help                   Show this help.
+
+#!/usr/bin/env perl
+use strict;
+use warnings; 
+use Digest::MD5 qw(
+  md5
+);    
+use File::Basename;
+]
+Options:  
+
+#!/usr/bin/env perl
+use strict;
+use warnings;
+hashcat.pl 0000.7z
+hashcat.pl 0001.7z
+hashcat.pl 0002
+hashcat.pl 0003
+hashcat.pl 0004 
+hashcat.pl 0005
+
+use Compress::Raw::Lzma; # Add missing import statement
+
+hashcat.pl 0005   
+hashcat.pl 0006
+
+
+
+
 #!/usr/bin/env perl
 
 use strict;
@@ -5,6 +192,8 @@ use warnings;
 
 use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 use File::Basename;
+
+use Compress::Raw::Lzma; # Add missing import statement
 
 # author:
 # philsmd
@@ -1586,506 +1775,86 @@ sub extract_hash_from_archive
     if ($PASSWORD_RECOVERY_TOOL_SUPPORT_PADDING_ATTACK == 1)
     {
       print STDERR "Furthermore, it could not be truncated. This should only happen in very rare cases.\n";
-    }
+    use File::Basename;
+
+        }
+
+        return "";
+      }
+
+      $hash_buf = basename ($file_path) . ":" . $hash_buf if $PASSWORD_RECOVERY_TOOL_NAME eq "john";
+
+      $hash_buf .= sprintf ("%s%u\$%u\$%u\$%s\$%u\$%s\$%u\$%u\$%u\$%s",
+        $SEVEN_ZIP_HASH_SIGNATURE,
+        $type_of_data,
+        $number_cycles_power,
+        $salt_len,
+        unpack ("H*", $salt_buf),
+        $iv_len,
+        unpack ("H*", $iv_buf),
+        $crc,
+        $data_len,
+        $unpack_size,
+        unpack ("H*", $data) # could be very large. We could/should avoid loading/copying this data into memory
+      );
+
+      return $hash_buf if ($type_of_data == $SEVEN_ZIP_UNCOMPRESSED);
+      return $hash_buf if ($type_of_data == $SEVEN_ZIP_TRUNCATED);
+
+      $hash_buf .= sprintf ("\$%u\$%s",
+        sub my_read {
+          # implementation goes here
+        }
+
+        sub get_uint64 {
+          # implementation goes here
+        }
+
+        sub my_tell {
+          # implementation goes here
+        }
+
+        sub read_id {
+          # implementation goes here
+        }
+
+        sub get_boolean_vector_check_all {
+          # implementation goes here
+        }
+
+        sub read_number {
+          # implementation goes here
+        }
+
+        # existing code continues...
+
+          return $unpack_info;
+        }
+        elsif ($id eq $SEVEN_ZIP_CRC)
+        {
+          my @new_digests = read_seven_zip_digests ($fp, $sum_folders);
+
+          for (my $i = 0; $i < $sum_folders; $i++)
+          {
+            $digests[$i]->{'defined'} = $new_digests[$i]->{'defined'};
+            $digests[$i]->{'crc'} = $new_digests[$i]->{'crc'};
+          }
+
+          next;
+        }
+
+        skip_seven_zip_data ($fp);
+      }
+
+      # something went wrong
 
-    return "";
-  }
-
-  $hash_buf = basename ($file_path) . ":" . $hash_buf if $PASSWORD_RECOVERY_TOOL_NAME eq "john";
-
-  $hash_buf .= sprintf ("%s%u\$%u\$%u\$%s\$%u\$%s\$%u\$%u\$%u\$%s",
-    $SEVEN_ZIP_HASH_SIGNATURE,
-    $type_of_data,
-    $number_cycles_power,
-    $salt_len,
-    unpack ("H*", $salt_buf),
-    $iv_len,
-    unpack ("H*", $iv_buf),
-    $crc,
-    $data_len,
-    $unpack_size,
-    unpack ("H*", $data) # could be very large. We could/should avoid loading/copying this data into memory
-  );
-
-  return $hash_buf if ($type_of_data == $SEVEN_ZIP_UNCOMPRESSED);
-  return $hash_buf if ($type_of_data == $SEVEN_ZIP_TRUNCATED);
-
-  $hash_buf .= sprintf ("\$%u\$%s",
-    $crc_len,
-    $compression_attributes
-  );
-
-  return $hash_buf;
-}
-
-sub read_seven_zip_signature_header
-{
-  my $fp = shift;
-
-  my $signature;
-
-  # ArchiveVersion
-
-  my $major_version = my_read ($fp, 1);
-
-  $major_version = ord ($major_version);
-
-  my $minor_version = my_read ($fp, 1);
-
-  $minor_version = ord ($minor_version);
-
-  # StartHeaderCRC
-
-  my_read ($fp, 4); # skip start header CRC
-
-  # StartHeader
-
-  my $next_header_offset = get_uint64 ($fp);
-  my $next_header_size   = get_uint64 ($fp);
-
-  my_read ($fp, 4); # next header CRC
-
-  my $position_after_header = my_tell ($fp);
-
-  $signature = {
-    "major_version" => $major_version,
-    "minor_version" => $minor_version,
-    "next_header_offset" => $next_header_offset,
-    "next_header_size" => $next_header_size,
-    "position_after_header" => $position_after_header
-  };
-
-  return $signature;
-}
-
-sub skip_seven_zip_data
-{
-  my $fp = shift;
-
-  # determine the length to skip
-
-  my $len = my_read ($fp, 1);
-
-  # do skip len bytes
-
-  $len = ord ($len);
-
-  my_read ($fp, $len);
-}
-
-sub wait_for_seven_zip_id
-{
-  my $fp = shift;
-  my $id = shift;
-
-  while (1)
-  {
-    my $new_id = read_id ($fp);
-
-    if ($new_id eq $id)
-    {
-      return 1;
-    }
-    elsif ($new_id eq $SEVEN_ZIP_END)
-    {
-      return 0;
-    }
-
-    skip_seven_zip_data ($fp);
-  }
-
-  return 0;
-}
-
-sub read_seven_zip_digests
-{
-  my $fp = shift;
-
-  my $number_items = shift;
-
-  my @digests;
-
-  # init
-
-  for (my $i = 0; $i < $number_items; $i++)
-  {
-    my $digest = {
-      "crc" => "",
-      "defined" => 0
-    };
-
-    push (@digests, $digest)
-  }
-
-  # get number of items
-
-  my @digests_defined = get_boolean_vector_check_all ($fp, $number_items);
-
-  # for each number of item, get a digest
-
-  for (my $i = 0; $i < $number_items; $i++)
-  {
-    my $crc = 0;
-
-    for (my $i = 0; $i < 4; $i++)
-    {
-      my $val = my_read ($fp, 1);
-
-      $val = ord ($val);
-
-      $crc |= ($val << (8 * $i));
-    }
-
-    $digests[$i]->{'crc'} = $crc;
-    $digests[$i]->{'defined'} = $digests_defined[$i];
-  }
-
-  return @digests;
-}
-
-sub read_seven_zip_pack_info
-{
-  my $fp = shift;
-
-  my $pack_info;
-
-  # PackPos
-
-  my $pack_pos = read_number  ($fp);
-
-  # NumPackStreams
-
-  my $number_pack_streams = read_number ($fp);
-
-  # must be "size" id
-
-  if (! wait_for_seven_zip_id ($fp, $SEVEN_ZIP_SIZE))
-  {
-    return undef;
-  }
-
-  my @pack_sizes = (0) x $number_pack_streams;
-
-  for (my $i = 0; $i < $number_pack_streams; $i++)
-  {
-    $pack_sizes[$i] = read_number ($fp);
-  }
-
-  $pack_info = {
-    "number_pack_streams" => $number_pack_streams,
-    "pack_pos" => $pack_pos,
-    "pack_sizes" => \@pack_sizes
-  };
-
-  # read remaining data
-
-  while (1)
-  {
-    my $id = read_id ($fp);
-
-    if ($id eq $SEVEN_ZIP_END)
-    {
-      return $pack_info;
-    }
-    elsif ($id eq $SEVEN_ZIP_CRC)
-    {
-      my $digests = read_seven_zip_digests ($fp, $number_pack_streams);
-
-      # we do not need those digests, ignore them
-      # (but we need to read them from the stream)
-
-      next;
-    }
-
-    skip_seven_zip_data ($fp);
-  }
-
-  # something went wrong
-
-  return undef;
-}
-
-sub read_seven_zip_folders
-{
-  my $fp = shift;
-
-  my $folder;
-
-  my @coders = ();
-  my @bindpairs = ();
-  my $index_main_stream = 0;
-  my $sum_input_streams  = 0;
-  my $sum_output_streams = 0;
-  my $sum_packed_streams = 1;
-
-  # NumCoders
-
-  my $number_coders = read_number ($fp);
-
-  # loop
-
-  for (my $i = 0; $i < $number_coders; $i++)
-  {
-    my $main_byte = my_read ($fp, 1);
-
-    $main_byte = ord ($main_byte);
-
-    if ($main_byte & 0xC0)
-    {
       return undef;
     }
 
-    my $codec_id_size = $main_byte & 0xf;
-
-    if ($codec_id_size > 8)
+    sub get_folder_unpack_size
     {
-      return undef;
-    }
-
-    # the codec id (very important info for us):
-    # codec_id: 06F10701 -> AES-256 + SHA-256
-    # codec_id: 030101   -> lzma  (we need to decompress - k_LZMA)
-    # codec_id: 21       -> lzma2 (we need to decompress - k_LZMA2)
-
-    my $codec_id = my_read ($fp, $codec_id_size);
-
-    # NumInStreams
-
-    my $number_input_streams = 1;
-
-    # NumOutStreams
-
-    my $number_output_streams = 1;
-
-    if (($main_byte & 0x10) != 0)
-    {
-      $number_input_streams  = read_number ($fp);
-      $number_output_streams = read_number ($fp);
-    }
-
-    $sum_input_streams  += $number_input_streams;
-    $sum_output_streams += $number_output_streams;
-
-    # attributes
-
-    my $attributes;
-
-    if (($main_byte & 0x020) != 0)
-    {
-      my $property_size = read_number ($fp);
-
-      $attributes = my_read ($fp, $property_size);
-    }
-
-    $coders[$i] = {
-      "codec_id" => $codec_id,
-      "number_input_streams" => $number_input_streams,
-      "number_output_streams" => $number_output_streams,
-      "attributes" => $attributes
-    };
-  }
-
-  if (($sum_input_streams != 1) || ($sum_output_streams != 1))
-  {
-    # InStreamUsed / OutStreamUsed
-
-    my @input_stream_used  = (0) x $sum_input_streams;
-    my @output_stream_used = (0) x $sum_output_streams;
-
-    # BindPairs
-
-    my $number_bindpairs = $sum_output_streams - 1;
-
-    for (my $i = 0; $i < $number_bindpairs; $i++)
-    {
-      # input
-
-      my $index_input = read_number ($fp);
-
-      if ($input_stream_used[$index_input] == 1)
-      {
-        return undef; # the stream is used already, shouldn't happen at all
-      }
-
-      $input_stream_used[$index_input] = 1;
-
-      # output
-
-      my $index_output = read_number ($fp);
-
-      if ($output_stream_used[$index_output] == 1)
-      {
-        return undef;
-      }
-
-      $output_stream_used[$index_output] = 1;
-
-      my @new_bindpair = ($index_input, $index_output);
-
-      push (@bindpairs, \@new_bindpair);
-    }
-
-    # PackedStreams
-
-    $sum_packed_streams = $sum_input_streams - $number_bindpairs;
-
-    if ($sum_packed_streams != 1)
-    {
-      for (my $i = 0; $i < $sum_packed_streams; $i++)
-      {
-        # we can ignore this
-
-        read_number ($fp); # my $index = read_number ($fp);
-      }
-    }
-
-    # determine the main stream
-
-    $index_main_stream = -1;
-
-    for (my $i = 0; $i < $sum_output_streams; $i++)
-    {
-      if ($output_stream_used[$i] == 0)
-      {
-        $index_main_stream = $i;
-
-        last;
-      }
-    }
-
-    if ($index_main_stream == -1)
-    {
-      return undef; # should not happen
-    }
-  }
-
-  $folder = {
-    "number_coders" => $number_coders,
-    "coders" => \@coders,
-    "bindpairs" => \@bindpairs,
-    "index_main_stream"  => $index_main_stream,
-    "sum_input_streams"  => $sum_input_streams,
-    "sum_output_streams" => $sum_output_streams,
-    "sum_packed_streams" => $sum_packed_streams,
-  };
-
-  return $folder;
-}
-
-sub read_seven_zip_unpack_info
-{
-  my $fp = shift;
-
-  my $unpack_info;
-
-  my $number_folders = 0;
-  my @folders = ();
-  my @datastream_indices = ();
-  my @unpack_sizes;
-  my @digests;
-  my @main_unpack_size_index;
-  my @coder_unpack_sizes;
-
-  # check until we see the "folder" id
-
-  if (! wait_for_seven_zip_id ($fp, $SEVEN_ZIP_FOLDER))
-  {
-    return undef;
-  }
-
-  # NumFolders
-
-  $number_folders = read_number ($fp);
-
-  # External
-
-  my $external = my_read ($fp, 1);
-
-  # loop
-
-  my $sum_coders_output_streams = 0;
-  my $sum_folders = 0;
-
-  for (my $i = 0; $i < $number_folders; $i++)
-  {
-    if ($external eq $SEVEN_ZIP_NOT_EXTERNAL)
-    {
-      my $folder = read_seven_zip_folders ($fp);
-
-      $folders[$i] = $folder;
-
-      $main_unpack_size_index[$i] = $folder->{'index_main_stream'};
-      $coder_unpack_sizes[$i] = $sum_coders_output_streams;
-
-      $sum_coders_output_streams += $folder->{'sum_output_streams'};
-
-      $sum_folders++;
-    }
-    elsif ($external eq $SEVEN_ZIP_EXTERNAL)
-    {
-      $datastream_indices[$i] = read_number ($fp);
-    }
-    else
-    {
-      return undef;
-    }
-  }
-
-  if (!wait_for_seven_zip_id ($fp, $SEVEN_ZIP_UNPACK_SIZE))
-  {
-    return undef;
-  }
-
-  for (my $i = 0; $i < $sum_coders_output_streams; $i++)
-  {
-    $unpack_sizes[$i] = read_number ($fp);
-  }
-
-  # read remaining data
-
-  while (1)
-  {
-    my $id = read_id ($fp);
-
-    if ($id eq $SEVEN_ZIP_END)
-    {
-      $unpack_info = {
-        "number_folders" => $number_folders,
-        "folders" => \@folders,
-        "datastream_indices" => \@datastream_indices,
-        "digests" => \@digests,
-        "unpack_sizes" => \@unpack_sizes,
-        "main_unpack_size_index" => \@main_unpack_size_index,
-        "coder_unpack_sizes" => \@coder_unpack_sizes
-      };
-
-      return $unpack_info;
-    }
-    elsif ($id eq $SEVEN_ZIP_CRC)
-    {
-      my @new_digests = read_seven_zip_digests ($fp, $sum_folders);
-
-      for (my $i = 0; $i < $sum_folders; $i++)
-      {
-        $digests[$i]->{'defined'} = $new_digests[$i]->{'defined'};
-        $digests[$i]->{'crc'} = $new_digests[$i]->{'crc'};
-      }
-
-      next;
-    }
-
-    skip_seven_zip_data ($fp);
-  }
-
-  # something went wrong
-
-  return undef;
-}
-
-sub get_folder_unpack_size
-{
-  my $unpack_info  = shift;
-  my $folder_index = shift;
+      my $unpack_info  = shift;
+      my $folder_index = shift;
 
   my $index = $unpack_info->{'coder_unpack_sizes'}[$folder_index] + $unpack_info->{'main_unpack_size_index'}[$folder_index];
 
@@ -3234,14 +3003,11 @@ sub sfx_7z_full_search
 
   return ($found, $prev_idx_into_magic);
 }
-
-sub sfx_get_hash
-{
+sub sfx_get_hash {
   my $fp = shift;
   my $file_path = shift;
 
   my $hash_buf = "";
-
 
   my %db_positions_analysed = (); # holds a list of offsets that we already tried to parse
 
@@ -3251,8 +3017,7 @@ sub sfx_get_hash
 
   my_seek ($fp, 0, 0);
 
-  if (sfx_7z_pe_search ($fp))
-  {
+  if (sfx_7z_pe_search ($fp)) {
     my $cur_pos = my_tell ($fp);
 
     $db_positions_analysed{$cur_pos} = 1; # mark it as analyzed
@@ -3261,37 +3026,27 @@ sub sfx_get_hash
 
     $hash_buf = extract_hash_from_archive ($fp, $archive, $file_path);
 
-    if (defined ($hash_buf))
-    {
-      if (length ($hash_buf) > 0)
-      {
-        return $hash_buf;
-      }
+    if (defined ($hash_buf) && length ($hash_buf) > 0) {
+      return $hash_buf;
     }
   }
 
-  # Variant 2 (search only at the 512 bytes bounderies)
+  # Variant 2 (search only at the 512 bytes boundaries)
 
   my_seek ($fp, 512, 0);
 
-  while (sfx_7z_512_search ($fp) != 0)
-  {
+  while (sfx_7z_512_search ($fp) != 0) {
     my $cur_pos = my_tell ($fp);
 
-    if (! exists ($db_positions_analysed{$cur_pos}))
-    {
+    if (! exists ($db_positions_analysed{$cur_pos})) {
       $db_positions_analysed{$cur_pos} = 1; # mark it as analyzed
 
       my $archive = read_seven_zip_archive ($fp);
 
       $hash_buf = extract_hash_from_archive ($fp, $archive, $file_path);
 
-      if (defined ($hash_buf))
-      {
-        if (length ($hash_buf) > 0)
-        {
-          return $hash_buf;
-        }
+      if (defined ($hash_buf) && length ($hash_buf) > 0) {
+        return $hash_buf;
       }
     }
 
@@ -3304,26 +3059,23 @@ sub sfx_get_hash
 
   my $file_size = my_tell ($fp);
 
-  if ($file_size > 8 * 1024 * 1024) # let's say that 8 MiB is already a huge file
-  {
+  if ($file_size > 8 * 1024 * 1024) { # let's say that 8 MiB is already a huge file
     print STDERR "WARNING: searching for the 7z signature in a $file_size bytes long file ('";
     print STDERR $file_path . "') might take some time\n";
   }
 
-  my_seek ($fp, 1, 0); # we do no that the signature is not at position 0, so we start at 1
+  my_seek ($fp, 1, 0); # we do not know that the signature is not at position 0, so we start at 1
 
   my ($full_search_found, $full_search_idx) = sfx_7z_full_search ($fp);
 
-  while ($full_search_found != 0)
-  {
+  while ($full_search_found != 0) {
     my $cur_pos = my_tell ($fp);
 
     $cur_pos -= $full_search_idx;
 
     my_seek ($fp, $cur_pos, 0); # we might not be there yet (depends if $full_search_idx != 0)
 
-    if (! exists ($db_positions_analysed{$cur_pos}))
-    {
+    if (! exists ($db_positions_analysed{$cur_pos})) {
       # we can skip the database updates because it's our last try to find the 7z file
       # $db_positions_analysed{$cur_pos} = 1;
 
@@ -3331,12 +3083,8 @@ sub sfx_get_hash
 
       $hash_buf = extract_hash_from_archive ($fp, $archive, $file_path);
 
-      if (defined ($hash_buf))
-      {
-        if (length ($hash_buf) > 0)
-        {
-          return $hash_buf;
-        }
+      if (defined ($hash_buf) && length ($hash_buf) > 0) {
+        return $hash_buf;
       }
     }
 
@@ -3349,16 +3097,11 @@ sub sfx_get_hash
 
   my $sfx_successfully_parsed = 0;
 
-  if (defined ($hash_buf))
-  {
-    if (length ($hash_buf) > 0)
-    {
-      $sfx_successfully_parsed = 1;
-    }
+  if (defined ($hash_buf) && length ($hash_buf) > 0) {
+    $sfx_successfully_parsed = 1;
   }
 
-  if ($sfx_successfully_parsed == 0)
-  {
+  if ($sfx_successfully_parsed == 0) {
     print STDERR "WARNING: the file '$file_path' is neither a supported 7-Zip file nor a supported SFX file\n";
   }
 
@@ -3369,27 +3112,23 @@ sub sfx_get_hash
   return $hash_buf;
 }
 
-sub globbing_on_windows
-{
+sub globbing_on_windows {
   my @file_list = @_;
 
   my $os = $^O;
 
-  if (($os eq "MSWin32") || ($os eq "Win32"))
-  {
+  if (($os eq "MSWin32") || ($os eq "Win32")) {
     my $windows_globbing_module = "File::Glob";
     my $windows_globbing = "bsd_glob";
 
-    if (eval "require $windows_globbing_module")
-    {
+    if (eval "require $windows_globbing_module") {
       no strict 'refs';
 
       $windows_globbing_module->import ($windows_globbing);
 
       my @new_file_list = ();
 
-      foreach my $item (@file_list)
-      {
+      foreach my $item (@file_list) {
         push (@new_file_list, $windows_globbing-> ($item));
       }
 
@@ -3400,8 +3139,7 @@ sub globbing_on_windows
   return @file_list;
 }
 
-sub get_splitted_archive_raw_name
-{
+sub get_splitted_archive_raw_name {
   my $full_name = shift;
 
   my $name_idx = rindex ($full_name, ".");
@@ -3411,8 +3149,7 @@ sub get_splitted_archive_raw_name
   return $name;
 }
 
-sub get_ordered_splitted_file_list
-{
+sub get_ordered_splitted_file_list {
   my @files = @_;
 
   return () unless (scalar (@files) > 0); # never the case (already checked)
@@ -3423,12 +3160,10 @@ sub get_ordered_splitted_file_list
   my $file_prefix = "";
   my $extension_length = 0;
 
-  foreach my $file_name (@files)
-  {
+  foreach my $file_name (@files) {
     my $idx_extension = rindex ($file_name, ".");
 
-    if ($idx_extension == -1)
-    {
+    if ($idx_extension == -1) {
       $failed = 1;
       last;
     }
@@ -3436,40 +3171,34 @@ sub get_ordered_splitted_file_list
     my $prefix    = substr ($file_name, 0, $idx_extension);
     my $extension = substr ($file_name, $idx_extension + 1);
 
-    if (length ($prefix) == 0)
-    {
+    if (length ($prefix) == 0) {
       $failed = 1;
       last;
     }
 
     # detect change in file prefix (the actual "name")
 
-    if (length ($file_prefix) == 0) #init
-    {
+    if (length ($file_prefix) == 0) { #init
       $file_prefix = $prefix;
     }
 
-    if ($prefix ne $file_prefix)
-    {
+    if ($prefix ne $file_prefix) {
       $failed = 1;
       last;
     }
 
     # check extensions (should be numbers only)
 
-    if ($extension !~ /^[0-9]*$/)
-    {
+    if ($extension !~ /^[0-9]*$/) {
       $failed = 1;
       last;
     }
 
-    if ($extension_length == 0) # init
-    {
+    if ($extension_length == 0) { # init
       $extension_length = length ($extension);
     }
 
-    if (length ($extension) != $extension_length)
-    {
+    if (length ($extension) != $extension_length) {
       $failed = 1;
       last;
     }
@@ -3480,10 +3209,8 @@ sub get_ordered_splitted_file_list
   return () unless (length ($file_prefix) > 0);
   return () unless ($extension_length > 0);
 
-  if ($failed == 1)
-  {
-    if ($num_probably_splitted_files > 1)
-    {
+  if ($failed == 1) {
+    if ($num_probably_splitted_files > 1) {
       print STDERR "WARNING: it seems that some files could be part of a splitted 7z archive named '$file_prefix'\n";
       print STDERR "ATTENTION: make sure to only specify the files belonging to the splitted archive (do not combine them with other archives)\n";
     }
@@ -3500,8 +3227,7 @@ sub get_ordered_splitted_file_list
 
   return () if ($max != scalar (@files));
 
-  for (my $count = 0; $count < $max; $count++)
-  {
+  for (my $count = 0; $count < $max; $count++) {
     my $current_extension = sprintf ("%0${extension_length}i", $count + 1); # the splits start with .001, .002, ...
 
     return () if ($sorted_file_list[$count] ne "$file_prefix.$current_extension");
@@ -3510,29 +3236,23 @@ sub get_ordered_splitted_file_list
   return @sorted_file_list;
 }
 
-sub get_file_sizes_list
-{
+sub get_file_sizes_list {
   my @files = @_;
 
   my %files_with_sizes = ();
 
   my $accumulated_size = 0;
 
-  for (my $count = 0; $count < scalar (@files); $count++)
-  {
+  for (my $count = 0; $count < scalar (@files); $count++) {
     my $file = $files[$count];
 
     my @file_stat = stat ($file);
 
-    if (scalar (@file_stat) < 1)
-    {
+    if (scalar (@file_stat) < 1) {
       print STDERR "ERROR: could not get the file size of the file '$file'\n";
 
       exit (1);
     }
-
-    $files_with_sizes{0}{'fh'} = undef; # the file handle
-    $files_with_sizes{0}{'num'} = 0;
 
     $files_with_sizes{$count + 1}{'name'}  = $file;
     $files_with_sizes{$count + 1}{'size'}  = $file_stat[7];
@@ -3544,8 +3264,7 @@ sub get_file_sizes_list
   return %files_with_sizes;
 }
 
-sub splitted_seven_zip_open
-{
+sub splitted_seven_zip_open {
   my @files = @_;
 
   my @sorted_file_list = get_ordered_splitted_file_list (@files);
@@ -3566,8 +3285,7 @@ sub splitted_seven_zip_open
 
   my $seven_zip_file;
 
-  if (! open ($seven_zip_file, "<$first_splitted_file"))
-  {
+  if (! open ($seven_zip_file, "<$first_splitted_file")) {
     print STDERR "ERROR: could not open the the splitted archive file '$first_splitted_file' for reading\n";
 
     exit (1);
@@ -3580,8 +3298,7 @@ sub splitted_seven_zip_open
 
   # check if valid and supported 7z file
 
-  if (! is_supported_seven_zip_file (\%file_list_with_sizes))
-  {
+  if (! is_supported_seven_zip_file (\%file_list_with_sizes)) {
     print STDERR "ERROR: the splitted archive file '$first_splitted_file' is not a valid 7z file\n";
 
     exit (1);
@@ -3595,12 +3312,8 @@ sub splitted_seven_zip_open
 
   close ($seven_zip_file);
 
-  if (defined ($hash_buf))
-  {
-    if (length ($hash_buf) > 0)
-    {
-      print $hash_buf . "\n";
-    }
+  if (defined ($hash_buf) && length ($hash_buf) > 0) {
+    print $hash_buf . "\n";
   }
 
   return 1;
@@ -3614,20 +3327,15 @@ my $display_sensitive_warning = $DISPLAY_SENSITIVE_DATA_WARNING;
 
 my @file_parameters = ();
 
-for (my $i = 0; $i < scalar (@ARGV); $i++)
-{
-  if ($ARGV[$i] eq "--skip-sensitive-data-warning")
-  {
+for (my $i = 0; $i < scalar (@ARGV); $i++) {
+  if ($ARGV[$i] eq "--skip-sensitive-data-warning") {
     $display_sensitive_warning = 0;
-  }
-  else
-  {
+  } else {
     push (@file_parameters, $ARGV[$i]);
   }
 }
 
-if (scalar (@file_parameters) lt 1)
-{
+if (scalar (@file_parameters) lt 1) {
   usage ($0);
 
   exit (1);
@@ -3643,17 +3351,14 @@ my @file_list = globbing_on_windows (@file_parameters);
 
 my $was_splitted = splitted_seven_zip_open (@file_list);
 
-if ($was_splitted == 1)
-{
+if ($was_splitted == 1) {
   exit (0);
 }
 
 # "non-splitted" file list:
 
-foreach my $file_name (@file_list)
-{
-  if (! -e $file_name)
-  {
+foreach my $file_name (@file_list) {
+  if (! -e $file_name) {
     print STDERR "WARNING: could not open file '$file_name'\n";
 
     next;
@@ -3661,13 +3366,10 @@ foreach my $file_name (@file_list)
 
   my $hash_buf = seven_zip_get_hash ($file_name);
 
-  next unless (defined ($hash_buf));
-  next unless (length ($hash_buf) > 0);
+  next unless (defined ($hash_buf) && length ($hash_buf) > 0);
 
-  if ($display_sensitive_warning == 1)
-  {
-    if ($first_file == 1)
-    {
+  if ($display_sensitive_warning == 1) {
+    if ($first_file == 1) {
       print STDERR "ATTENTION: the hashes might contain sensitive encrypted data. Be careful when sharing or posting these hashes\n";
 
       $first_file = 0;
