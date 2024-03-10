@@ -62,7 +62,7 @@
 0001.7z: 1536 bytes, MD5: 489bafd4a3f3d3e3e3e3e3e3e3e3e3e3 (OK)
 0002.7z: 1536 bytes, MD5: 489bafd4a3f3d3e3e3e3e3e3e3e3e3e3 (OK)
 
-Usage: 7z2hashcat.pl <0000.7z
+Usage: 7z2hashcat.pl <COMP200MB0322.7z.hashcatCOMP200MB0322.7z.hashcat.7z
 
 7z2hashcat.pl - 7-Zip hashcat format tool v1.6, by philsmd and magnum
 Usage: 7z2hashcat.pl <7-Zip 0000>..<7-Zip 0000>
