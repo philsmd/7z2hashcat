@@ -1,5 +1,4 @@
 # Run hashcat command with appropriate arguments
- 7z��'
   7z2hashcat.pl 0000.7z -o hash.txt --show=64,16:8 --force-outfile --potfile-disable --qu     
 # Version: 1.6
   # Hash type: 7zip (7z)  
