@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 1.9
+# 2.0
 
 # date released:
 # April 2015
 
 # date last updated:
-# July 13 2022
+# April 10 2024
 
 # dependencies:
 # Compress::Raw::Lzma
@@ -1313,16 +1313,18 @@ sub extract_hash_from_archive
 
   # get the first coder
 
-  my $coder_id = 0;
+  my $coder_index = 0;
 
-  my $coder = $folder->{'coders'}[$coder_id];
+  my $coder = $folder->{'coders'}[$coder_index];
   return undef unless (defined ($coder));
 
   my $codec_id = $coder->{'codec_id'};
 
   # set index and seek to postition
 
-  my $current_index = 0;
+  my $pack_size_index   = 0;
+  my $unpack_size_index = 0;
+  my $folder_index      = 0;
 
   my_seek ($fp, $current_seek_position, 0);
 
@@ -1332,9 +1334,10 @@ sub extract_hash_from_archive
   {
     # get the sizes
 
-    my $unpack_size = $unpack_info->{'unpack_sizes'}[$current_index];
+    # my $unpack_size = $unpack_info->{'unpack_sizes'}[$unpack_size_index];
+    my $unpack_size = get_folder_aes_unpack_size ($unpack_info, $folder_index);
 
-    my $data_len = $pack_info->{'pack_sizes'}[$current_index];
+    my $data_len = $pack_info->{'pack_sizes'}[$pack_size_index];
 
     # get the data
 
@@ -1478,6 +1481,8 @@ sub extract_hash_from_archive
 
     for (my $folder_pos = 0; $folder_pos < $number_folders; $folder_pos++)
     {
+      $folder_index = $folder_pos;
+
       $folder = @$folders[$folder_pos];
       last unless (defined ($folder));
 
@@ -1490,7 +1495,7 @@ sub extract_hash_from_archive
         $coder = $folder->{'coders'}[$coder_pos];
         last unless (defined ($coder));
 
-        $coder_id = $coder_pos; # Attention: coder_id != codec_id !
+        $coder_index = $coder_pos;
 
         $codec_id = $coder->{'codec_id'};
 
@@ -1499,22 +1504,26 @@ sub extract_hash_from_archive
         # to print several hash buffers, but this is a very special case)
 
         last if ($codec_id eq $SEVEN_ZIP_AES);
-
-        # ELSE: update seek position and index:
-
-        if ($current_index < $num_pack_sizes) # not all pack_sizes always need to be known (final ones can be skipped)
-        {
-          my $pack_size = $pack_info->{'pack_sizes'}[$current_index];
-
-          $current_seek_position += $pack_size;
-        }
-
-        $current_index++;
       }
 
       last if ($codec_id eq $SEVEN_ZIP_AES);
 
       last unless (defined ($coder));
+
+      # ELSE: update seek position and index:
+
+      my $sum_packed_streams = $unpack_info->{'folders'}[$folder_pos]->{'sum_packed_streams'};
+
+      for (my $packed_stream = 0; $packed_stream < $sum_packed_streams; $packed_stream++)
+      {
+        my $pack_size = $pack_info->{'pack_sizes'}[$pack_size_index + $packed_stream];
+
+        $current_seek_position += $pack_size;
+      }
+
+      $pack_size_index += $sum_packed_streams;
+
+      $unpack_size_index += $substreams_info->{'unpack_stream_numbers'}[$folder_pos];
     }
 
     # we unfortunately can't do anything if no AES encrypted data was found
@@ -1548,11 +1557,9 @@ sub extract_hash_from_archive
 
   # first get the data with help of pack info
 
-  my $unpack_size = $unpack_info->{'unpack_sizes'}[$current_index];
+  my $unpack_size = get_folder_aes_unpack_size ($unpack_info, $folder_index);
 
-  my $data_len = $pack_info->{'pack_sizes'}[$current_index];
-
-  my $digests_index = $current_index; # correct ?
+  my $data_len = $pack_info->{'pack_sizes'}[$pack_size_index];
 
   # reset the file pointer to the position after signature header and get the data
 
@@ -1560,7 +1567,7 @@ sub extract_hash_from_archive
 
   # get remaining hash info (iv, number cycles power)
 
-  my $digest = get_digest ($digests_index, $unpack_info, $substreams_info);
+  my $digest = get_digest ($unpack_size_index, $unpack_info, $substreams_info);
 
   return "" unless ((defined ($digest)) && ($digest->{'defined'} == 1));
 
@@ -1607,7 +1614,7 @@ sub extract_hash_from_archive
 
   my @coder_attributes = (); # type, is_preprocessor, attributes
 
-  for (my $coder_pos = $coder_id + 1; $coder_pos < $number_coders; $coder_pos++)
+  for (my $coder_pos = $coder_index + 1; $coder_pos < $number_coders; $coder_pos++)
   {
     $coder = $folder->{'coders'}[$coder_pos];
     last unless (defined ($coder));
@@ -1640,9 +1647,9 @@ sub extract_hash_from_archive
 
   if (($type_of_data != $SEVEN_ZIP_UNCOMPRESSED) && ($type_of_data != $SEVEN_ZIP_TRUNCATED))
   {
-    if (scalar ($substreams_info->{'unpack_sizes'}) > 0)
+    if (scalar ($substreams_info->{'unpack_sizes'}) > $unpack_size_index)
     {
-      $crc_len = $substreams_info->{'unpack_sizes'}[0]; # default: use the first file of the first stream
+      $crc_len = $substreams_info->{'unpack_sizes'}[$unpack_size_index];
     }
   }
 
@@ -1660,10 +1667,11 @@ sub extract_hash_from_archive
         # check if there is a stream with a smaller first file than the first file of the first stream
         # (this is just a clever approach to produce shorter hashes)
 
-        my $file_idx    = 0;
-        my $data_offset = 0;
+        my $next_file_index      = 0;
+        my $next_pack_size_index = 0;
+        my $next_data_offset     = 0;
 
-        my $data_offset_tmp = 0;
+        my $data_offset = 0;
 
         # sanity checks (otherwise we might overflow):
 
@@ -1677,13 +1685,36 @@ sub extract_hash_from_archive
           $number_streams = $number_folders;
         }
 
-        for (my $stream_idx = 0; $stream_idx < $number_streams; $stream_idx++)
+        for (my $stream_index = 0; $stream_index < $number_streams; $stream_index++)
         {
-          my $next_file_idx = $substreams_info->{'unpack_stream_numbers'}[$stream_idx];
+          my $file_index = $next_file_index;
 
-          my $length_first_file = $substreams_info->{'unpack_sizes'}[$file_idx];
+          last if ($file_index >= $number_file_indices); # should never happen
 
-          my $length_compressed = $pack_info->{'pack_sizes'}[$stream_idx];
+          $next_file_index += $substreams_info->{'unpack_stream_numbers'}[$stream_index];
+
+          my $length_first_file = $substreams_info->{'unpack_sizes'}[$file_index];
+
+
+          my $data_offset_tmp = $next_data_offset;
+
+          my $pack_size_index = $next_pack_size_index;
+
+          last if ($pack_size_index >= $number_pack_info); # should never happen
+
+          my $sum_packed_streams = $unpack_info->{'folders'}[$stream_index]->{'sum_packed_streams'};
+
+          $next_pack_size_index += $sum_packed_streams;
+
+          my $length_compressed = 0;
+
+          for (my $packed_stream = 0; $packed_stream < $sum_packed_streams; $packed_stream++)
+          {
+            $length_compressed += $pack_info->{'pack_sizes'}[$pack_size_index + $packed_stream];
+          }
+
+          $next_data_offset += $length_compressed;
+
 
           if ($SHOW_LIST_OF_ALL_STREAMS == 1)
           {
@@ -1692,31 +1723,31 @@ sub extract_hash_from_archive
 
           if ($length_first_file < $crc_len)
           {
-            my $digest = get_digest ($file_idx, $unpack_info, $substreams_info);
+            my $digest = get_digest ($file_index, $unpack_info, $substreams_info);
 
             next unless ((defined ($digest)) && ($digest->{'defined'} == 1));
 
             # get new AES settings (salt, iv, costs):
 
-            my $coders = @$folders[$stream_idx]->{'coders'};
+            my $coders = @$folders[$stream_index]->{'coders'};
 
-            my $number_coders = @$folders[$stream_idx]->{'number_coders'};
+            my $number_coders = @$folders[$stream_index]->{'number_coders'};
 
-            my $aes_coder_idx   = 0;
+            my $aes_coder_index = 0;
             my $aes_coder_found = 0;
 
             my @coder_attributes = ();
 
-            for (my $coders_idx = 0; $coders_idx < $number_coders; $coders_idx++)
+            for (my $coders_index = 0; $coders_index < $number_coders; $coders_index++)
             {
-              my $coder = @$coders[$coders_idx];
+              my $coder = @$coders[$coders_index];
               last unless (defined ($coder));
 
               my $codec_id = $coder->{'codec_id'};
 
               if ($codec_id eq $SEVEN_ZIP_AES)
               {
-                $aes_coder_idx = $coders_idx;
+                $aes_coder_index = $coders_index;
 
                 $aes_coder_found = 1;
               }
@@ -1777,7 +1808,7 @@ sub extract_hash_from_archive
             $type_of_data          = $tmp_type_of_data;
             $additional_attributes = $tmp_additional_attributes;
 
-            $attributes = @$coders[$aes_coder_idx]->{'attributes'};
+            $attributes = @$coders[$aes_coder_index]->{'attributes'};
 
             if ($tmp_codec_warning_shown == 0)
             {
@@ -1796,22 +1827,14 @@ sub extract_hash_from_archive
 
             $data_len = $length_compressed;
 
-            $unpack_size = $length_first_file;
+            # $unpack_size = $length_first_file;
+            $unpack_size = get_folder_aes_unpack_size ($unpack_info, $stream_index);
 
             $data_offset = $data_offset_tmp;
 
             # we assume that $type_of_data and $type_of_compression didn't change between the streams
             # (this should/could be checked too to avoid any strange problems)
           }
-
-          $file_idx += $next_file_idx;
-
-          if ($file_idx >= $number_file_indices) # should never happen
-          {
-            last;
-          }
-
-          $data_offset_tmp += $length_compressed;
         }
 
         if ($SHOW_LIST_OF_ALL_STREAMS == 1)
@@ -1821,7 +1844,7 @@ sub extract_hash_from_archive
 
         if ($data_offset > 0)
         {
-          my_seek ($fp, $data_offset, 1);
+          my_seek ($fp, $position_after_header + $position_pack + $data_offset, 0);
         }
       }
 
@@ -1862,6 +1885,14 @@ sub extract_hash_from_archive
     }
 
     return "";
+  }
+
+  if ($unpack_size > $data_len)
+  {
+    print STDERR "WARNING: some file info seem to be conflicting. The length (metadata) of decrypted data seems to be larger than the actual encrypted (and compressed, if applicable) data length.\n";
+    print STDERR "This could also be a potential problem with this hash extraction script (please report this issue if it is reproducible with known data and password).\n";
+
+    $unpack_size = $data_len; # our MAX ()
   }
 
   $hash_buf = basename ($file_path) . ":" . $hash_buf if $PASSWORD_RECOVERY_TOOL_NAME eq "john";
@@ -2361,6 +2392,16 @@ sub get_folder_unpack_size
   my $folder_index = shift;
 
   my $index = $unpack_info->{'coder_unpack_sizes'}[$folder_index] + $unpack_info->{'main_unpack_size_index'}[$folder_index];
+
+  return $unpack_info->{'unpack_sizes'}[$index];
+}
+
+sub get_folder_aes_unpack_size
+{
+  my $unpack_info  = shift;
+  my $folder_index = shift;
+
+  my $index = $unpack_info->{'coder_unpack_sizes'}[$folder_index];
 
   return $unpack_info->{'unpack_sizes'}[$index];
 }
@@ -3459,8 +3500,8 @@ sub sfx_7z_full_search
 
   my $found = 0;
 
-  my $idx_into_magic = 0;
-  my $prev_idx_into_magic = 0;
+  my $index_into_magic = 0;
+  my $prev_index_into_magic = 0;
 
   my $len_bytes = $SEVEN_ZIP_MAGIC_LEN;
 
@@ -3470,7 +3511,7 @@ sub sfx_7z_full_search
 
     last if (length  ($bytes) == 0);
 
-    $prev_idx_into_magic = $idx_into_magic;
+    $prev_index_into_magic = $index_into_magic;
 
     if ($bytes eq $SEVEN_ZIP_MAGIC)
     {
@@ -3483,15 +3524,15 @@ sub sfx_7z_full_search
     {
       my $c = substr ($bytes, $i, 1);
 
-      if ($c ne substr ($SEVEN_ZIP_MAGIC, $idx_into_magic, 1))
+      if ($c ne substr ($SEVEN_ZIP_MAGIC, $index_into_magic, 1))
       {
-        $idx_into_magic = 0; #reset
+        $index_into_magic = 0; # reset
       }
       else
       {
-        $idx_into_magic++;
+        $index_into_magic++;
 
-        if ($idx_into_magic == $SEVEN_ZIP_MAGIC_LEN)
+        if ($index_into_magic == $SEVEN_ZIP_MAGIC_LEN)
         {
           $found = 1;
 
@@ -3505,7 +3546,7 @@ sub sfx_7z_full_search
     $len_bytes = length ($bytes);
   }
 
-  return ($found, $prev_idx_into_magic);
+  return ($found, $prev_index_into_magic);
 }
 
 sub sfx_get_hash
@@ -3585,15 +3626,15 @@ sub sfx_get_hash
 
   my_seek ($fp, 1, 0); # we do no that the signature is not at position 0, so we start at 1
 
-  my ($full_search_found, $full_search_idx) = sfx_7z_full_search ($fp);
+  my ($full_search_found, $full_search_index) = sfx_7z_full_search ($fp);
 
   while ($full_search_found != 0)
   {
     my $cur_pos = my_tell ($fp);
 
-    $cur_pos -= $full_search_idx;
+    $cur_pos -= $full_search_index;
 
-    my_seek ($fp, $cur_pos, 0); # we might not be there yet (depends if $full_search_idx != 0)
+    my_seek ($fp, $cur_pos, 0); # we might not be there yet (depends if $full_search_index != 0)
 
     if (! exists ($db_positions_analysed{$cur_pos}))
     {
@@ -3615,7 +3656,7 @@ sub sfx_get_hash
 
     my_seek ($fp, $cur_pos, 0); # seek back to position JUST AFTER the previously found signature
 
-    ($full_search_found, $full_search_idx) = sfx_7z_full_search ($fp);
+    ($full_search_found, $full_search_index) = sfx_7z_full_search ($fp);
   }
 
   # in theory if we reach this code section we already know that parsing the file failed (but let's confirm it)
@@ -3677,9 +3718,9 @@ sub get_splitted_archive_raw_name
 {
   my $full_name = shift;
 
-  my $name_idx = rindex ($full_name, ".");
+  my $name_index = rindex ($full_name, ".");
 
-  my $name = substr ($full_name, 0, $name_idx);
+  my $name = substr ($full_name, 0, $name_index);
 
   return $name;
 }
@@ -3698,16 +3739,16 @@ sub get_ordered_splitted_file_list
 
   foreach my $file_name (@files)
   {
-    my $idx_extension = rindex ($file_name, ".");
+    my $index_extension = rindex ($file_name, ".");
 
-    if ($idx_extension == -1)
+    if ($index_extension == -1)
     {
       $failed = 1;
       last;
     }
 
-    my $prefix    = substr ($file_name, 0, $idx_extension);
-    my $extension = substr ($file_name, $idx_extension + 1);
+    my $prefix    = substr ($file_name, 0, $index_extension);
+    my $extension = substr ($file_name, $index_extension + 1);
 
     if (length ($prefix) == 0)
     {
