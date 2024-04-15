@@ -2055,7 +2055,7 @@ sub read_seven_zip_pack_info
 
   # PackPos
 
-  my $pack_pos = read_number  ($fp);
+  my $pack_pos = read_number ($fp);
 
   # NumPackStreams
 
@@ -3509,7 +3509,7 @@ sub sfx_7z_full_search
   {
     my $bytes = my_read ($fp, $SEVEN_ZIP_MAGIC_LEN);
 
-    last if (length  ($bytes) == 0);
+    last if (length ($bytes) == 0);
 
     $prev_index_into_magic = $index_into_magic;
 
