@@ -3973,6 +3973,10 @@ foreach my $file_name (@file_list)
     next;
   }
 
+  # reset the offset for the in-memory buffer before every new file:
+
+  $memory_buffer_read_offset = 0;
+
   my $hash_buf = seven_zip_get_hash ($file_name);
 
   next unless (defined ($hash_buf));
