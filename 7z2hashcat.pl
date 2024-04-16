@@ -1877,7 +1877,7 @@ sub extract_hash_from_archive
   if ($data_len > ($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2))
   {
     print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the data length\n";
-    print STDERR "in this particular case is too long ($data_len of the maximum allowed " .($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2). " bytes).\n";
+    print STDERR "in this particular case is too long ($data_len of the maximum allowed " . ($PASSWORD_RECOVERY_TOOL_DATA_LIMIT / 2) . " bytes).\n";
 
     if ($PASSWORD_RECOVERY_TOOL_SUPPORT_PADDING_ATTACK == 1)
     {
@@ -1911,6 +1911,13 @@ sub extract_hash_from_archive
     unpack ("H*", $data) # could be very large. We could/should avoid loading/copying this data into memory
   );
 
+  if (length ($hash_buf) > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
+  {
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the overall length of the hash line in this particular case is too long (" . length ($hash_buf) . " of the maximum allowed " . $PASSWORD_RECOVERY_TOOL_DATA_LIMIT . " bytes).\n";
+
+    return "";
+  }
+
   return $hash_buf if ($type_of_data == $SEVEN_ZIP_UNCOMPRESSED);
   return $hash_buf if ($type_of_data == $SEVEN_ZIP_TRUNCATED);
 
@@ -1918,6 +1925,13 @@ sub extract_hash_from_archive
     $crc_len,
     $additional_attributes
   );
+
+  if (length ($hash_buf) > $PASSWORD_RECOVERY_TOOL_DATA_LIMIT)
+  {
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the overall length of the hash line in this particular case is too long (" . length ($hash_buf) . " of the maximum allowed " . $PASSWORD_RECOVERY_TOOL_DATA_LIMIT . " bytes).\n";
+
+    return "";
+  }
 
   return $hash_buf;
 }
