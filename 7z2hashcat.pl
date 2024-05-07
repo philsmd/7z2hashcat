@@ -19,6 +19,9 @@ use File::Basename;
 # date last updated:
 # April 10 2024
 
+# license:
+# public domain
+
 # dependencies:
 # Compress::Raw::Lzma
 # File::Basename
