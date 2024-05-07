@@ -6,7 +6,7 @@ use warnings;
 use Compress::Raw::Lzma qw (LZMA_STREAM_END LZMA_DICT_SIZE_MIN);
 use File::Basename;
 
-# author:
+# authors:
 # philsmd
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
