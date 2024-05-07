@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 2.0
+# 2.1
 
 # date released:
 # April 2015
 
 # date last updated:
-# April 10 2024
+# May 04 2024
 
 # license:
 # public domain
@@ -156,6 +156,7 @@ my $DISPLAY_SENSITIVE_DATA_WARNING = 1; # 0 means skip or use --skip-sensitive-d
 
 my $PASSWORD_RECOVERY_TOOL_NAME = "hashcat";
 my $PASSWORD_RECOVERY_TOOL_DATA_LIMIT = 16 * 1024 * 1024;    # hexadecimal output value. This value should always be >= 64
+my $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT = 9999999;      # compressed data is allowed to expand to at most this size (in bytes)
 my $PASSWORD_RECOVERY_TOOL_SUPPORT_PADDING_ATTACK  = 0;      # does the cracker support the AES-CBC padding attack (0 means no, 1 means yes)
 my @PASSWORD_RECOVERY_TOOL_SUPPORTED_DECOMPRESSORS = (1, 2); # within this list we only need values ranging from 1 to 7
                                                              # i.e. SEVEN_ZIP_LZMA1_COMPRESSED to SEVEN_ZIP_DEFLATE_COMPRESSED
@@ -1886,6 +1887,13 @@ sub extract_hash_from_archive
     {
       print STDERR "Furthermore, it could not be truncated. This should only happen in very rare cases.\n";
     }
+
+    return "";
+  }
+
+  if ($crc_len > $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT)
+  {
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the unpack size (total length in bytes of the expanded/decompressed data stream) is too large ($crc_len of the maxium allowed $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT bytes).\n";
 
     return "";
   }
