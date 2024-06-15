@@ -96,16 +96,17 @@ If no truncation is used/possible:
      - 7 means that the data must be decompressed using the DEFLATE decompressor
      - 8-15 reserved (future use)
    - Upper nibble (4 bits, (type >> 4) & 0xf):
-     - 1 means that the data must be post-processed using BCJ (x86)
-     - 2 means that the data must be post-processed using BCJ2 (four data streams needed)
-     - 3 means that the data must be post-processed using PPC (big-endian)
-     - 4 means that the data must be post-processed using IA64
-     - 5 means that the data must be post-processed using ARM (little-endian)
-     - 6 means that the data must be post-processed using ARMT (little-endian)
-     - 7 means that the data must be post-processed using SPARC
-     - 8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
-     - 9 means that the data must be post-processed using DELTA
-     - 10-15 reserved (future use)
+     -  1 means that the data must be post-processed using BCJ (x86)
+     -  2 means that the data must be post-processed using BCJ2 (four data streams needed)
+     -  3 means that the data must be post-processed using PPC (big-endian)
+     -  4 means that the data must be post-processed using IA64
+     -  5 means that the data must be post-processed using ARM (little-endian)
+     -  6 means that the data must be post-processed using ARMT (little-endian)
+     -  7 means that the data must be post-processed using SPARC
+     -  8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
+     -  9 means that the data must be post-processed using DELTA
+     - 10 means that the data must be post-processed using 7zAES
+     - 11-15 reserved (future use)
 
 Truncated data can only be verified using the padding attack and therefore combinations between truncation and a compressor are not meaningful/allowed.  
   

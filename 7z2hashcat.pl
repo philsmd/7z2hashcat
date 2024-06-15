@@ -11,13 +11,13 @@ use File::Basename;
 # magnum (added proper handling of BCJ et. al. and adapt to JtR use)
 
 # version:
-# 2.1
+# 2.2
 
 # date released:
 # April 2015
 
 # date last updated:
-# May 04 2024
+# June 15 2024
 
 # license:
 # public domain
@@ -100,16 +100,17 @@ use File::Basename;
 #   - 8 .. 15 reserved (future use)
 #
 # UPPER NIBBLE (4 bits, (type >> 4) & 0xf)
-#   - 1 means that the data must be post-processed using BCJ (x86)
-#   - 2 means that the data must be post-processed using BCJ2 (four data streams needed)
-#   - 3 means that the data must be post-processed using PPC (big-endian)
-#   - 4 means that the data must be post-processed using IA64
-#   - 5 means that the data must be post-processed using ARM (little-endian)
-#   - 6 means that the data must be post-processed using ARMT (little-endian)
-#   - 7 means that the data must be post-processed using SPARC
-#   - 8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
-#   - 9 means that the data must be post-processed using DELTA
-#   - 10 .. 15 reserved (future use)
+#   -  1 means that the data must be post-processed using BCJ (x86)
+#   -  2 means that the data must be post-processed using BCJ2 (four data streams needed)
+#   -  3 means that the data must be post-processed using PPC (big-endian)
+#   -  4 means that the data must be post-processed using IA64
+#   -  5 means that the data must be post-processed using ARM (little-endian)
+#   -  6 means that the data must be post-processed using ARMT (little-endian)
+#   -  7 means that the data must be post-processed using SPARC
+#   -  8 unavailable since this indicates TRUNCATION (128 == 0x80 == 8 << 4)
+#   -  9 means that the data must be post-processed using DELTA
+#   - 10 means that the data must be post-processed using 7zAES
+#   - 11 .. 15 reserved (future use)
 
 # Truncated data can only be verified using the padding attack and therefore combinations between truncation + a compressor are not allowed.
 # Therefore, whenever the value is 128 or 0, neither coder attributes nor the length of the data for the CRC32 check is within the output.
@@ -248,12 +249,13 @@ my $SEVEN_ZIP_ARMT_PREPROCESSED  =   6;
 my $SEVEN_ZIP_SPARC_PREPROCESSED =   7;
                                  #   8 conflicts with SEVEN_ZIP_TRUNCATED (128 == 0x80 == 8 << 4)
 my $SEVEN_ZIP_DELTA_PREPROCESSED =   9;
+my $SEVEN_ZIP_AES_PREPROCESSED   =  10;
 
 my $SEVEN_ZIP_TRUNCATED          = 128; # (0x80 or 0b10000000)
 
 my %SEVEN_ZIP_COMPRESSOR_NAMES   = (1 => "LZMA1", 2 => "LZMA2", 3 => "PPMD", 6 => "BZIP2", 7 => "DEFLATE",
                                     (1 << 4) => "BCJ", (2 << 4) => "BCJ2", (3 << 4) => "PPC", (4 << 4) => "IA64",
-                                    (5 << 4) => "ARM", (6 << 4) => "ARMT", (7 << 4) => "SPARC", (9 << 4) => "DELTA");
+                                    (5 << 4) => "ARM", (6 << 4) => "ARMT", (7 << 4) => "SPARC", (9 << 4) => "DELTA", (10 << 4) => "7zAES");
 
 #
 # Helper functions
@@ -987,6 +989,12 @@ sub fill_additional_attribute_list
   elsif ($codec_id eq $SEVEN_ZIP_DELTA)
   {
     $type = $SEVEN_ZIP_DELTA_PREPROCESSED;
+
+    $is_preprocessor = 1;
+  }
+  elsif ($codec_id eq $SEVEN_ZIP_AES)
+  {
+    $type = $SEVEN_ZIP_AES_PREPROCESSED;
 
     $is_preprocessor = 1;
   }
