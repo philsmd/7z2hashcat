@@ -1901,7 +1901,7 @@ sub extract_hash_from_archive
 
   if ($crc_len > $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT)
   {
-    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the unpack size (total length in bytes of the expanded/decompressed data stream) is too large ($crc_len of the maxium allowed $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT bytes).\n";
+    print STDERR "WARNING: the file '". $file_path . "' unfortunately can't be used with $PASSWORD_RECOVERY_TOOL_NAME since the unpack size (total length in bytes of the expanded/decompressed data stream) is too large ($crc_len of the maximum allowed $PASSWORD_RECOVERY_TOOL_UNPACK_SIZE_LIMIT bytes).\n";
 
     return "";
   }
